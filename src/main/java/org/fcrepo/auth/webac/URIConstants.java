@@ -26,7 +26,7 @@ import java.net.URI;
  *      http://www.w3.org/wiki/WebAccessControl/Vocabulary</a>
  * @see <a href="http://www.w3.org/ns/auth/acl">http://www.w3.org/ns/auth/acl</a>
  */
-public abstract class URIConstants {
+public class URIConstants {
 
     /**
      * Namespace for the W3C WebAC vocabulary.
@@ -77,4 +77,7 @@ public abstract class URIConstants {
      * Control access mode.
      */
     public static final URI WEBAC_MODE_CONTROL = URI.create(WEBAC_MODE_CONTROL_VALUE);
+
+    private URIConstants() {
+    }
 }

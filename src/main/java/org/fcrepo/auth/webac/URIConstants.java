@@ -21,6 +21,7 @@ import java.net.URI;
  * URIs used by the WebAC module.
  *
  * @author Peter Eichman
+ * @author whikloj
  * @since Aug 25, 2015
  * @see <a href="http://www.w3.org/wiki/WebAccessControl/Vocabulary">
  *      http://www.w3.org/wiki/WebAccessControl/Vocabulary</a>
@@ -78,6 +79,31 @@ public class URIConstants {
      */
     public static final URI WEBAC_MODE_CONTROL = URI.create(WEBAC_MODE_CONTROL_VALUE);
 
+    /**
+     * WebAC agent
+     */
+    public static final String WEBAC_AGENT_VALUE = WEBAC_NAMESPACE_VALUE + "agent";
+    public static final URI WEBAC_AGENT = URI.create(WEBAC_AGENT_VALUE);
+
+    /**
+     * WebAC agentClass
+     */
+    public static final String WEBAC_AGENT_CLASS_VALUE = WEBAC_NAMESPACE_VALUE + "agentClass";
+    public static final URI WEBAC_AGENT_CLASS = URI.create(WEBAC_AGENT_CLASS_VALUE);
+
+    /**
+     * WebAC accessTo
+     */
+    public static final String WEBAC_ACCESSTO_VALUE = WEBAC_NAMESPACE_VALUE + "accessTo";
+    public static final URI WEBAC_ACCESSTO = URI.create(WEBAC_ACCESSTO_VALUE);
+
+    /**
+     * WebAC accessToClass
+     */
+    public static final String WEBAC_ACCESSTO_CLASS_VALUE = WEBAC_NAMESPACE_VALUE + "accessToClass";
+    public static final URI WEBAC_ACCESSTO_CLASS = URI.create(WEBAC_ACCESSTO_CLASS_VALUE);
+
     private URIConstants() {
     }
+
 }

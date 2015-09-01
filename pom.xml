@@ -114,6 +114,13 @@
 
     <dependency>
       <groupId>org.fcrepo</groupId>
+      <artifactId>fcrepo-auth-common</artifactId>
+      <version>4.3.1-SNAPSHOT</version>
+      <scope>test</scope>
+      <type>test-jar</type>
+    </dependency>
+    <dependency>
+      <groupId>org.fcrepo</groupId>
       <artifactId>fcrepo-auth-roles-common</artifactId>
       <version>4.3.1-SNAPSHOT</version>
       <scope>test</scope>

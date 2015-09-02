@@ -80,6 +80,12 @@ public class URIConstants {
     public static final URI WEBAC_MODE_CONTROL = URI.create(WEBAC_MODE_CONTROL_VALUE);
 
     /**
+     * Authorization class.
+     */
+    public static final String WEBAC_AUTHORIZATION_VALUE = WEBAC_NAMESPACE_VALUE + "Authorization";
+    public static final URI WEBAC_AUTHORIZATION = URI.create(WEBAC_AUTHORIZATION_VALUE);
+
+    /**
      * WebAC agent
      */
     public static final String WEBAC_AGENT_VALUE = WEBAC_NAMESPACE_VALUE + "agent";

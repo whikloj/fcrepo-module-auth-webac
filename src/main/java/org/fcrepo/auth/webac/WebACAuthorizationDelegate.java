@@ -15,6 +15,9 @@
  */
 package org.fcrepo.auth.webac;
 
+import static org.fcrepo.auth.webac.URIConstants.FOAF_AGENT_VALUE;
+
+import java.security.Principal;
 import java.util.Set;
 
 import javax.jcr.Session;
@@ -37,6 +40,24 @@ public class WebACAuthorizationDelegate extends AbstractRolesAuthorizationDelega
      */
     private static final Logger LOGGER = LoggerFactory.getLogger(WebACAuthorizationDelegate.class);
 
+    /**
+     * The security principal for every request, that represents the foaf:Agent agent class that is used to designate
+     * "everyone".
+     */
+    private static final Principal EVERYONE = new Principal() {
+
+        @Override
+        public String getName() {
+            return FOAF_AGENT_VALUE;
+        }
+
+        @Override
+        public String toString() {
+            return getName();
+        }
+
+    };
+
     @Override
     public boolean rolesHavePermission(final Session userSession, final String absPath,
             final String[] actions, final Set<String> roles) {
@@ -48,6 +69,11 @@ public class WebACAuthorizationDelegate extends AbstractRolesAuthorizationDelega
                 permit);
 
         return permit;
+    }
+
+    @Override
+    public Principal getEveryonePrincipal() {
+        return EVERYONE;
     }
 
 }

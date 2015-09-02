@@ -110,6 +110,12 @@ public class URIConstants {
     public static final URI WEBAC_ACCESS_CONTROL = URI.create(WEBAC_ACCESS_CONTROL_VALUE);
 
     /**
+     * WebAC mode
+     */
+    public static final String WEBAC_MODE_VALUE = WEBAC_NAMESPACE_VALUE + "mode";
+    public static final URI WEBAC_MODE = URI.create(WEBAC_MODE_VALUE);
+
+    /**
      * FOAF Namespace
      */
     public static final String FOAF_NAMESPACE_VALUE = "http://xmlns.com/foaf/0.1/";

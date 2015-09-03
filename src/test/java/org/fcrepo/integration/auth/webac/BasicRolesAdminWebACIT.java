@@ -19,30 +19,30 @@ import static org.slf4j.LoggerFactory.getLogger;
 
 import java.util.List;
 
-import org.fcrepo.auth.roles.basic.integration.AbstractBasicRolesIT;
 import org.fcrepo.auth.roles.common.integration.RolesFadTestObjectBean;
+
 import org.junit.Test;
 import org.slf4j.Logger;
 
 /**
- * @author acoburn
- * @since Aug 25, 2015
+ * @author whikloj
  */
-public class WebACRolesReaderIT extends AbstractBasicRolesIT {
+public class BasicRolesAdminWebACIT extends WebACAbstractRolesIT {
 
-    private static Logger LOGGER = getLogger(WebACRolesReaderIT.class);
+    private static Logger LOGGER = getLogger(BasicRolesAdminWebACIT.class);
+
+    /**
+     * This test is good for running individually to find bootstrap problems with the delegate. All it does is build the
+     * Fedora XACML environment.
+     */
+    @Test
+    public void test() {
+        LOGGER.debug("Spring startup was successfull.");
+    }
 
     @Override
     protected List<RolesFadTestObjectBean> getTestObjs() {
         return test_objs;
-    }
-
-    /**
-     * Tests that the Spring context is complete.
-     */
-    @Test
-    public final void test() {
-        LOGGER.debug("Spring startup was successfull.");
     }
 
 }

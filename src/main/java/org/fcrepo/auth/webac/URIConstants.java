@@ -26,6 +26,7 @@ import java.net.URI;
  * @see <a href="http://www.w3.org/wiki/WebAccessControl/Vocabulary">
  *      http://www.w3.org/wiki/WebAccessControl/Vocabulary</a>
  * @see <a href="http://www.w3.org/ns/auth/acl">http://www.w3.org/ns/auth/acl</a>
+ * @see <a href="http://fedora.info/definitions/v4/webac">http://fedora.info/definitions/v4/webac</a>
  */
 public class URIConstants {
 
@@ -132,6 +133,18 @@ public class URIConstants {
      */
     public static final String FOAF_AGENT_VALUE = FOAF_NAMESPACE_VALUE + "Agent";
     public static final URI FOAF_AGENT = URI.create(FOAF_AGENT_VALUE);
+
+    /**
+     * Fedora WebAC Namespace
+     */
+    public static final String FEDORA_WEBAC_NAMESPACE_VALUE = "http://fedora.info/definitions/v4/webac#";
+    public static final URI FEDORA_WEBAC_NAMESPACE = URI.create(FEDORA_WEBAC_NAMESPACE_VALUE);
+
+    /**
+     * Fedora ACL
+     */
+    public static final String FEDORA_WEBAC_ACL_VALUE = FEDORA_WEBAC_NAMESPACE_VALUE + "Acl";
+    public static final URI FEDORA_WEBAC_ACL = URI.create(FEDORA_WEBAC_ACL_VALUE);
 
     private URIConstants() {
     }

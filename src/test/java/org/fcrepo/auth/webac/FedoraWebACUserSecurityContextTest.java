@@ -26,17 +26,19 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.fcrepo.auth.common.FedoraAuthorizationDelegate;
 import org.fcrepo.auth.common.FedoraUserSecurityContext;
-import org.fcrepo.auth.common.FedoraUserSecurityContextTest;
 
 import org.junit.Assert;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.runners.MockitoJUnitRunner;
 
 /**
  * @author mohideen
  * @since 9/1/15.
  */
-public class FedoraWebACUserSecurityContextTest extends FedoraUserSecurityContextTest {
+@RunWith(MockitoJUnitRunner.class)
+public class FedoraWebACUserSecurityContextTest {
 
     @Mock
     private FedoraAuthorizationDelegate fad;

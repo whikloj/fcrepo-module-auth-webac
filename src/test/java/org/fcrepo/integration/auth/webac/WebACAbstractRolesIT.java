@@ -259,6 +259,7 @@ public abstract class WebACAbstractRolesIT extends AbstractBasicRolesIT {
     }
 
     protected void putACL(final String path) throws Exception {
+        logger.info("putACL({})", path);
         final HttpPut method = putObjMethod(path);
         method.addHeader("Content-type", "text/turtle");
         final StringEntity acl = new StringEntity("<> a " + FEDORA_WEBAC_ACL_VALUE + " .");

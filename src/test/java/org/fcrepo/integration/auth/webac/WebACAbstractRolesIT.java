@@ -31,7 +31,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.UUID;
 
-import org.fcrepo.auth.roles.basic.integration.AbstractBasicRolesIT;
+import org.fcrepo.auth.roles.basic.integration.BasicRolesAdminIT;
 import org.fcrepo.auth.roles.common.integration.RolesFadTestObjectBean;
 
 import org.apache.http.HttpResponse;
@@ -45,8 +45,8 @@ import org.slf4j.Logger;
  * @author whikloj
  * @since 2015-09-03
  */
-public abstract class WebACAbstractRolesIT extends AbstractBasicRolesIT {
-
+// public abstract class WebACAbstractRolesIT extends AbstractBasicRolesIT {
+public abstract class WebACAbstractRolesIT extends BasicRolesAdminIT {
     private static Logger logger = getLogger(WebACAbstractRolesIT.class);
 
     protected final static String testParent1 = getRandomPid();
@@ -89,6 +89,7 @@ public abstract class WebACAbstractRolesIT extends AbstractBasicRolesIT {
 
     private static List<RolesFadTestObjectBean> defineTestObjects() {
 
+        logger.debug("WebACAbstractRolesIT");
         logger.debug("testParent1: {}", testParent1);
         logger.debug("testParent2: {}", testParent2);
         logger.debug("testParent3: {}", testParent3);
@@ -262,7 +263,7 @@ public abstract class WebACAbstractRolesIT extends AbstractBasicRolesIT {
         logger.info("putACL({})", path);
         final HttpPut method = putObjMethod(path);
         method.addHeader("Content-type", "text/turtle");
-        final StringEntity acl = new StringEntity("<> a " + FEDORA_WEBAC_ACL_VALUE + " .");
+        final StringEntity acl = new StringEntity("<> a " + wrapURIs(FEDORA_WEBAC_ACL_VALUE) + " .");
         method.setEntity(acl);
         setAuth(method, "fedoraAdmin");
         final HttpResponse response = client.execute(method);
@@ -273,14 +274,14 @@ public abstract class WebACAbstractRolesIT extends AbstractBasicRolesIT {
     }
 
     protected void putAuthorization(final String path, final List<Map<String, String>> acls) throws Exception {
-        final String patch = "<> a " + WEBAC_AUTHORIZATION_VALUE;
+        logger.info("putAuthorization({})", path);
+        final String patch = "<> a " + wrapURIs(WEBAC_AUTHORIZATION_VALUE);
         for (final Map<String, String> m : acls) {
             for (final Entry<String, String> entry : m.entrySet()) {
                 patch.concat(" ; " + wrapURIs(entry.getKey().toString()) + " " + wrapURIs(entry.getValue().toString()));
             }
         }
         patch.concat(" .");
-
         final HttpPut method = putObjMethod(path);
         method.addHeader("Content-type", "text/turtle");
         final StringEntity acl = new StringEntity(patch);
@@ -291,6 +292,16 @@ public abstract class WebACAbstractRolesIT extends AbstractBasicRolesIT {
         final int status = response.getStatusLine().getStatusCode();
         assertEquals("Didn't get a CREATED response! Got content:\n" + content,
                 CREATED.getStatusCode(), status);
+    }
+
+    @Override
+    protected void addDatastreamACLs(
+            final RolesFadTestObjectBean obj,
+            final String dsid) throws Exception {
+        if (obj.getDatastreamACLs(dsid) != null) {
+            putACL(obj.getPath() + "/" + dsid + "/acl_resource");
+            putAuthorization(obj.getPath() + "/" + dsid + "/acl_resource/auth1", obj.getDatastreamACLs(dsid));
+        }
     }
 
     private String wrapURIs(final String input) {

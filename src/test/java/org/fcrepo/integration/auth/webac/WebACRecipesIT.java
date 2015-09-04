@@ -21,17 +21,16 @@ import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+
+import org.fcrepo.integration.http.api.AbstractResourceIT;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.FileEntity;
-import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
@@ -39,18 +38,14 @@ import org.apache.http.message.AbstractHttpMessage;
 import org.apache.http.util.EntityUtils;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.slf4j.Logger;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 /**
  * @author Peter Eichman
+ * @author whikloj
  * @since September 4, 2015
  */
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration("/spring-test/test-container.xml")
-public class WebACRecipesIT {
+public class WebACRecipesIT extends AbstractResourceIT {
 
     private static Logger logger = getLogger(WebACRecipesIT.class);
 
@@ -75,31 +70,12 @@ public class WebACRecipesIT {
 
     @Before
     public void setUp() throws ClientProtocolException, IOException {
-        // TODO: this should be factored out into a repeatable method to set up each scenario
-        final HttpPost postRequest = new HttpPost(serverAddress);
-
-        final String creds = "username:password";
-        // in test configuration we don't need real passwords
-        final String encCreds = new String(Base64.encodeBase64(creds.getBytes()));
-        final String basic = "Basic " + encCreds;
-        postRequest.setHeader("Authorization", basic);
-
-        final InputStream acl = this.getClass().getResourceAsStream("/acls/01/acl.ttl");
-        final InputStreamEntity acl_entity = new InputStreamEntity(acl);
-        postRequest.setEntity(acl_entity);
-        postRequest.setHeader("Content-Type", "text/turtle;charset=UTF-8");
-
-        // XXX: this is currently failing in the test repository with a
-        // "java.lang.VerifyError: Bad type on operand stack"
-        // see https://gist.github.com/peichman-umd/7f2eb8833ef8cd0cdfc1#gistcomment-1566271
-        final HttpResponse res = client.execute(postRequest);
-        System.err.println(res.getStatusLine());
-
         logger.debug("setup complete");
     }
 
     @Test
-    public void test() throws Exception {
+    public void scenario1() throws Exception {
+        logger.info("Running scenario1");
         final String objA = getRandomPid();
         final HttpPut method = new HttpPut(serverAddress + "/" + objA);
         final FileEntity acl =

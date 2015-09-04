@@ -22,8 +22,6 @@ import static org.slf4j.LoggerFactory.getLogger;
 import java.io.File;
 import java.io.IOException;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
-
 import org.fcrepo.integration.http.api.AbstractResourceIT;
 
 import org.apache.commons.codec.binary.Base64;
@@ -31,11 +29,7 @@ import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.FileEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.message.AbstractHttpMessage;
-import org.apache.http.util.EntityUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -49,24 +43,7 @@ public class WebACRecipesIT extends AbstractResourceIT {
 
     private static Logger logger = getLogger(WebACRecipesIT.class);
 
-    protected static final int SERVER_PORT = Integer.parseInt(System.getProperty("fcrepo.dynamic.test.port", "8080"));
-
-    protected static final String HOSTNAME = "localhost";
-
-    protected static final String serverAddress = "http://" + HOSTNAME + ":" + SERVER_PORT + "/rest/";
-
-    protected final PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
-
-    protected static CloseableHttpClient client;
-
-    protected final ClassLoader classLoader = getClass().getClassLoader();
-
-    public WebACRecipesIT() {
-        connectionManager.setMaxTotal(Integer.MAX_VALUE);
-        connectionManager.setDefaultMaxPerRoute(20);
-        connectionManager.closeIdleConnections(3, TimeUnit.SECONDS);
-        client = HttpClientBuilder.create().setConnectionManager(connectionManager).build();
-    }
+    private final ClassLoader classLoader = getClass().getClassLoader();
 
     @Before
     public void setUp() throws ClientProtocolException, IOException {
@@ -84,9 +61,8 @@ public class WebACRecipesIT extends AbstractResourceIT {
         method.setHeader("Content-type", "text/turtle");
         method.setEntity(acl);
         try (final CloseableHttpResponse response = super.execute(method)) {
-            final String content = EntityUtils.toString(response.getEntity());
             final int status = super.getStatus(response);
-            assertEquals("Didn't get a CREATED response! Got content:\n" + content,
+            assertEquals("Didn't get a CREATED response!\n",
                     CREATED.getStatusCode(), status);
         }
     }

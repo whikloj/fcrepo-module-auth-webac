@@ -77,7 +77,7 @@ public class WebACRecipesIT extends AbstractResourceIT {
     public void scenario1() throws Exception {
         logger.info("Running scenario1");
         final String objA = getRandomPid();
-        final HttpPut method = super.putObjMethod(serverAddress + "/" + objA);
+        final HttpPut method = super.putObjMethod("rest/" + objA);
         final FileEntity acl =
                 new FileEntity(new File(classLoader.getResource("acls/01/acl.ttl").getFile()));
         setAuth(method, "fedoraAdmin");

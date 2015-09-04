@@ -27,8 +27,8 @@ import java.util.concurrent.TimeUnit;
 import org.fcrepo.integration.http.api.AbstractResourceIT;
 
 import org.apache.commons.codec.binary.Base64;
-import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.FileEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -77,17 +77,18 @@ public class WebACRecipesIT extends AbstractResourceIT {
     public void scenario1() throws Exception {
         logger.info("Running scenario1");
         final String objA = getRandomPid();
-        final HttpPut method = new HttpPut(serverAddress + "/" + objA);
+        final HttpPut method = super.putObjMethod(serverAddress + "/" + objA);
         final FileEntity acl =
                 new FileEntity(new File(classLoader.getResource("acls/01/acl.ttl").getFile()));
         setAuth(method, "fedoraAdmin");
         method.setHeader("Content-type", "text/turtle");
         method.setEntity(acl);
-        final HttpResponse response = client.execute(method);
-        final String content = EntityUtils.toString(response.getEntity());
-        final int status = response.getStatusLine().getStatusCode();
-        assertEquals("Didn't get a CREATED response! Got content:\n" + content,
-                CREATED.getStatusCode(), status);
+        try (final CloseableHttpResponse response = super.execute(method)) {
+            final String content = EntityUtils.toString(response.getEntity());
+            final int status = super.getStatus(response);
+            assertEquals("Didn't get a CREATED response! Got content:\n" + content,
+                    CREATED.getStatusCode(), status);
+        }
     }
 
     protected static void setAuth(final AbstractHttpMessage method, final String username) {

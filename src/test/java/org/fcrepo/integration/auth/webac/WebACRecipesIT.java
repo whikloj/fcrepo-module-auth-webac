@@ -25,7 +25,6 @@ import java.util.UUID;
 import org.fcrepo.integration.http.api.AbstractResourceIT;
 
 import org.apache.commons.codec.binary.Base64;
-import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.FileEntity;
@@ -46,7 +45,7 @@ public class WebACRecipesIT extends AbstractResourceIT {
     private final ClassLoader classLoader = getClass().getClassLoader();
 
     @Before
-    public void setUp() throws ClientProtocolException, IOException {
+    public void setUp() throws IOException {
         logger.debug("setup complete");
     }
 
@@ -55,23 +54,19 @@ public class WebACRecipesIT extends AbstractResourceIT {
         logger.info("Running scenario1");
         final String objA = getRandomPid();
         final HttpPut method = super.putObjMethod("rest/" + objA);
-        final FileEntity acl =
-                new FileEntity(new File(classLoader.getResource("acls/01/acl.ttl").getFile()));
+        final FileEntity acl = new FileEntity(new File(classLoader.getResource("acls/01/acl.ttl").getFile()));
         setAuth(method, "fedoraAdmin");
         method.setHeader("Content-type", "text/turtle");
         method.setEntity(acl);
         try (final CloseableHttpResponse response = super.execute(method)) {
-            final int status = super.getStatus(response);
-            assertEquals("Didn't get a CREATED response!\n",
-                    CREATED.getStatusCode(), status);
+            assertEquals(CREATED.getStatusCode(), super.getStatus(response));
         }
     }
 
     protected static void setAuth(final AbstractHttpMessage method, final String username) {
         final String creds = username + ":password";
         // in test configuration we don't need real passwords
-        final String encCreds =
-                new String(Base64.encodeBase64(creds.getBytes()));
+        final String encCreds = new String(Base64.encodeBase64(creds.getBytes()));
         final String basic = "Basic " + encCreds;
         method.setHeader("Authorization", basic);
     }

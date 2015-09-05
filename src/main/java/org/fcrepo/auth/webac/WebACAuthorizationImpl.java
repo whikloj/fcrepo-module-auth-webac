@@ -13,14 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.fcrepo.auth.webac.impl;
+package org.fcrepo.auth.webac;
 
 import java.net.URI;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
-
-import org.fcrepo.auth.webac.WebACAuthorization;
 
 /**
  * @author acoburn

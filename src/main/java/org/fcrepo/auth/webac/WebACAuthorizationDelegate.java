@@ -15,9 +15,24 @@
  */
 package org.fcrepo.auth.webac;
 
+import static java.util.Collections.unmodifiableMap;
 import static org.fcrepo.auth.webac.URIConstants.FOAF_AGENT_VALUE;
+import static org.fcrepo.auth.webac.URIConstants.WEBAC_MODE_CONTROL_VALUE;
+import static org.fcrepo.auth.webac.URIConstants.WEBAC_MODE_READ_VALUE;
+import static org.fcrepo.auth.webac.URIConstants.WEBAC_MODE_WRITE_VALUE;
+import static org.modeshape.jcr.ModeShapePermissions.ADD_NODE;
+import static org.modeshape.jcr.ModeShapePermissions.MODIFY_ACCESS_CONTROL;
+import static org.modeshape.jcr.ModeShapePermissions.READ;
+import static org.modeshape.jcr.ModeShapePermissions.READ_ACCESS_CONTROL;
+import static org.modeshape.jcr.ModeShapePermissions.REGISTER_NAMESPACE;
+import static org.modeshape.jcr.ModeShapePermissions.REMOVE;
+import static org.modeshape.jcr.ModeShapePermissions.REMOVE_CHILD_NODES;
+import static org.modeshape.jcr.ModeShapePermissions.SET_PROPERTY;
 
 import java.security.Principal;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 import javax.jcr.Session;
@@ -41,6 +56,24 @@ public class WebACAuthorizationDelegate extends AbstractRolesAuthorizationDelega
      */
     private static final Logger LOGGER = LoggerFactory.getLogger(WebACAuthorizationDelegate.class);
 
+    private static final Map<String, String> actionMap;
+
+    static {
+        final Map<String, String> map = new HashMap<>();
+        // WEBAC_MODE_READ Permissions
+        map.put(READ, WEBAC_MODE_READ_VALUE);
+        // WEBAC_MODE_WRITE Permissions
+        map.put(ADD_NODE, WEBAC_MODE_WRITE_VALUE);
+        map.put(REGISTER_NAMESPACE, WEBAC_MODE_WRITE_VALUE);
+        map.put(REMOVE, WEBAC_MODE_WRITE_VALUE);
+        map.put(REMOVE_CHILD_NODES, WEBAC_MODE_WRITE_VALUE);
+        map.put(SET_PROPERTY, WEBAC_MODE_WRITE_VALUE);
+        // WEBAC_MODE_CONTROL Permissions
+        map.put(MODIFY_ACCESS_CONTROL, WEBAC_MODE_CONTROL_VALUE);
+        map.put(READ_ACCESS_CONTROL, WEBAC_MODE_CONTROL_VALUE);
+        actionMap = unmodifiableMap(map);
+    }
+
     /**
      * The security principal for every request, that represents the foaf:Agent agent class that is used to designate
      * "everyone".
@@ -62,7 +95,27 @@ public class WebACAuthorizationDelegate extends AbstractRolesAuthorizationDelega
     @Override
     public boolean rolesHavePermission(final Session userSession, final String absPath,
             final String[] actions, final Set<String> roles) {
-        final boolean permit = false;
+
+        /*
+         * If any value in the actions Array is NOT also in the roles Set, the request should be denied.
+         * Otherwise, e.g. all of the actions values are contained in the roles set, the request is approved.
+         * 
+         * The logic here may not be immediately obvious. The process is thus:
+         *   map: map the modeshape action to a webac action
+         *   filter: ALL of these actions MUST exist in the roles Set, so if any action
+         *      value does NOT exist in the roles Set, we want to know about that
+         *   findFirst: If any value makes it through that filter, it is enough to invalidate
+         *      the request. This is evaluated lazily, so the first item encountered will
+         *      short-circut the processing of the rest of the stream.
+         *   isPresent: this returns true if any value passed through the filter, but we
+         *      actually want to invert that logic, hence the ! at the beginning of the expression.
+         */
+        final boolean permit = !Arrays.asList(actions).stream()
+                 .map(actionMap::get)
+                 .filter(x -> !roles.contains(x))
+                 .findFirst()
+                 .isPresent();
+
         LOGGER.debug("Request for actions: {}, on path: {}, with roles: {}. Permission={}",
                 actions,
                 absPath,

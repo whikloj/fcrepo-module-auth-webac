@@ -35,7 +35,6 @@ import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.entity.StringEntity;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -164,33 +163,40 @@ public class WebACRecipesIT extends AbstractResourceIT {
 
     @Test
     public void scenario2() throws IOException {
-        final String testObj = ingestObj("/rest/box/bag/collection");
+        final String id = "/rest/box/bag/collection";
+        final String testObj = ingestObj(id);
         final String acl2 = ingestAcl("fedoraAdmin", "/acls/02/acl.ttl", "/acls/02/authorization.ttl");
         linkToAcl(testObj, acl2);
 
         logger.debug("Anonymous can not read " + testObj);
-        final HttpGet request = getObjMethod(testObj.replace(serverAddress, ""));
-        try (final CloseableHttpResponse response = execute(request)) {
+        final HttpGet requestGet = getObjMethod(id);
+        try (final CloseableHttpResponse response = execute(requestGet)) {
             assertEquals(HttpStatus.SC_FORBIDDEN, getStatus(response));
         }
 
         logger.debug("GroupId 'Editors' can read " + testObj);
-        setAuth(request, "Editors");
-        try (final CloseableHttpResponse response = execute(request)) {
+        final HttpGet requestGet2 = getObjMethod(id);
+        setAuth(requestGet2, "jones");
+        requestGet2.setHeader("some-header", "Editors");
+        try (final CloseableHttpResponse response = execute(requestGet2)) {
             assertEquals(HttpStatus.SC_OK, getStatus(response));
         }
 
         logger.debug("Anonymous cannot write " + testObj);
-        final HttpPatch patch = patchObjMethod(testObj.replace(serverAddress, ""));
-        patch.setEntity(new StringEntity("INSERT { <> <" + DC_TITLE + "> \"Test title\" . } WHERE {}"));
-        patch.setHeader("Content-type", "application/sparql-update");
-        try (final CloseableHttpResponse response = execute(patch)) {
+        final HttpPatch requestPatch = patchObjMethod(id);
+        requestPatch.setEntity(new StringEntity("INSERT { <> <" + DC_TITLE + "> \"Test title\" . } WHERE {}"));
+        requestPatch.setHeader("Content-type", "application/sparql-update");
+        try (final CloseableHttpResponse response = execute(requestPatch)) {
             assertEquals(HttpStatus.SC_FORBIDDEN, getStatus(response));
         }
 
         logger.debug("Editors can write " + testObj);
-        setAuth(patch, "Editors");
-        try (final CloseableHttpResponse response = execute(patch)) {
+        final HttpPatch requestPatch2 = patchObjMethod(id);
+        setAuth(requestPatch2, "jones");
+        requestPatch2.setHeader("some-header", "Editors");
+        requestPatch2.setEntity(new StringEntity("INSERT { <> <" + DC_TITLE + "> \"Different title\" . } WHERE {}"));
+        requestPatch2.setHeader("Content-type", "application/sparql-update");
+        try (final CloseableHttpResponse response = execute(requestPatch2)) {
             assertEquals(HttpStatus.SC_NO_CONTENT, getStatus(response));
         }
 
@@ -198,83 +204,95 @@ public class WebACRecipesIT extends AbstractResourceIT {
 
     @Test
     public void scenario3() throws IOException {
-        final String testObj = ingestObj("/rest/dark/archive");
-        final String testObj2 = ingestObj("/rest/dark/archive/sunshine");
+        final String idDark = "/rest/dark/archive";
+        final String idLight = "/rest/dark/archive/sunshine";
+        final String testObj = ingestObj(idDark);
+        final String testObj2 = ingestObj(idLight);
         final String acl3 =
                 ingestAcl("fedoraAdmin", "/acls/03/acl.ttl", "/acls/03/auth_open.ttl", "/acls/03/auth_restricted.ttl");
         linkToAcl(testObj, acl3);
 
         logger.debug("Anonymous can't read " + testObj);
-        final HttpGet request1 = getObjMethod(testObj.replace(serverAddress, ""));
-        try (final CloseableHttpResponse response = execute(request1)) {
+        final HttpGet requestGet = getObjMethod(idDark);
+        try (final CloseableHttpResponse response = execute(requestGet)) {
             assertEquals(HttpStatus.SC_FORBIDDEN, getStatus(response));
         }
 
         logger.debug("Restricted can read " + testObj);
-        setAuth(request1, "Restricted");
-        try (final CloseableHttpResponse response = execute(request1)) {
+        final HttpGet requestGet2 = getObjMethod(idDark);
+        setAuth(requestGet2, "jones");
+        requestGet2.setHeader("some-header", "Restricted");
+        try (final CloseableHttpResponse response = execute(requestGet2)) {
             assertEquals(HttpStatus.SC_OK, getStatus(response));
         }
 
         logger.debug("Anonymous can read " + testObj2);
-        final HttpGet request2 = getObjMethod(testObj2.replace(serverAddress, ""));
-        try (final CloseableHttpResponse response = execute(request1)) {
+        final HttpGet requestGet3 = getObjMethod(idLight);
+        try (final CloseableHttpResponse response = execute(requestGet3)) {
             assertEquals(HttpStatus.SC_OK, getStatus(response));
         }
 
         logger.debug("Restricted can read " + testObj2);
-        setAuth(request2, "Restricted");
-        try (final CloseableHttpResponse response = execute(request1)) {
+        final HttpGet requestGet4 = getObjMethod(idLight);
+        setAuth(requestGet4, "jones");
+        requestGet4.setHeader("some-header", "Restricted");
+        try (final CloseableHttpResponse response = execute(requestGet4)) {
             assertEquals(HttpStatus.SC_OK, getStatus(response));
         }
     }
 
     @Test
-    @Ignore("TODO - Failing!")
     public void scenario4() throws IOException {
-        final String testObj = ingestObj("/rest/public_collection");
+        final String id = "/rest/public_collection";
+        final String testObj = ingestObj(id);
         final String acl4 = ingestAcl("fedoraAdmin", "/acls/04/acl.ttl", "/acls/04/auth1.ttl", "/acls/04/auth2.ttl");
         linkToAcl(testObj, acl4);
 
         logger.debug("Anonymous can read " + testObj);
-        final HttpGet request = getObjMethod(testObj.replace(serverAddress, ""));
-        try (final CloseableHttpResponse response = execute(request)) {
+        final HttpGet requestGet = getObjMethod(id);
+        try (final CloseableHttpResponse response = execute(requestGet)) {
             assertEquals(HttpStatus.SC_OK, getStatus(response));
         }
 
         logger.debug("Editors can read " + testObj);
-        setAuth(request, "Editors");
-        try (final CloseableHttpResponse response = execute(request)) {
+        final HttpGet requestGet2 = getObjMethod(id);
+        setAuth(requestGet2, "jones");
+        requestGet2.setHeader("some-header", "Editors");
+        try (final CloseableHttpResponse response = execute(requestGet2)) {
             assertEquals(HttpStatus.SC_OK, getStatus(response));
         }
 
         logger.debug("Smith can access " + testObj);
-        final HttpGet request2 = getObjMethod(testObj.replace(serverAddress, ""));
-        setAuth(request2, "smith");
-        try (final CloseableHttpResponse response = execute(request2)) {
+        final HttpGet requestGet3 = getObjMethod(id);
+        setAuth(requestGet3, "smith");
+        try (final CloseableHttpResponse response = execute(requestGet3)) {
             assertEquals(HttpStatus.SC_OK, getStatus(response));
         }
 
         logger.debug("Anonymous can't write " + testObj);
-        final HttpPatch patch = patchObjMethod(testObj.replace(serverAddress, ""));
-        patch.setHeader("Content-type", "application/sparql-update");
-        patch.setEntity(new StringEntity("INSERT { <> <" + DC_TITLE + "> \"Change title\" . } WHERE {}"));
-        try (final CloseableHttpResponse response = execute(patch)) {
+        final HttpPatch requestPatch = patchObjMethod(id);
+        requestPatch.setHeader("Content-type", "application/sparql-update");
+        requestPatch.setEntity(new StringEntity("INSERT { <> <" + DC_TITLE + "> \"Change title\" . } WHERE {}"));
+        try (final CloseableHttpResponse response = execute(requestPatch)) {
             assertEquals(HttpStatus.SC_FORBIDDEN, getStatus(response));
         }
 
         logger.debug("Editors can write " + testObj);
-        setAuth(patch, "Editors");
-        try (final CloseableHttpResponse response = execute(patch)) {
+        final HttpPatch requestPatch2 = patchObjMethod(id);
+        requestPatch2.setHeader("Content-type", "application/sparql-update");
+        requestPatch2.setEntity(new StringEntity("INSERT { <> <" + DC_TITLE + "> \"New title\" . } WHERE {}"));
+        setAuth(requestPatch2, "jones");
+        requestPatch2.setHeader("some-header", "Editors");
+        try (final CloseableHttpResponse response = execute(requestPatch2)) {
             assertEquals(HttpStatus.SC_NO_CONTENT, getStatus(response));
         }
 
         logger.debug("Smith can't write " + testObj);
-        final HttpPatch patch2 = patchObjMethod(testObj.replace(serverAddress, ""));
-        patch2.setHeader("Content-type", "application/sparql-update");
-        patch2.setEntity(new StringEntity("INSERT { <> <" + DC_TITLE + "> \"Change title\" . } WHERE {}"));
-        setAuth(patch2, "smith");
-        try (final CloseableHttpResponse response = execute(patch2)) {
+        final HttpPatch requestPatch3 = patchObjMethod(id);
+        requestPatch3.setHeader("Content-type", "application/sparql-update");
+        requestPatch3.setEntity(new StringEntity("INSERT { <> <" + DC_TITLE + "> \"Different title\" . } WHERE {}"));
+        setAuth(requestPatch3, "smith");
+        try (final CloseableHttpResponse response = execute(requestPatch3)) {
             assertEquals(HttpStatus.SC_FORBIDDEN, getStatus(response));
         }
 
@@ -282,9 +300,11 @@ public class WebACRecipesIT extends AbstractResourceIT {
 
     @Test
     public void scenario5() throws IOException {
+        final String idPublic = "/rest/mixedCollection/publicObj";
+        final String idPrivate = "/rest/mixedCollection/privateObj";
         final String testObj = ingestObj("/rest/mixedCollection");
-        final String publicObj = ingestObj("/rest/mixedCollection/publicObj");
-        final HttpPatch patch = patchObjMethod("/rest/mixedCollection/publicObj");
+        final String publicObj = ingestObj(idPublic);
+        final HttpPatch patch = patchObjMethod(idPublic);
         final String acl5 =
                 ingestAcl("fedoraAdmin", "/acls/05/acl.ttl", "/acls/05/auth_open.ttl", "/acls/05/auth_restricted.ttl");
         linkToAcl(testObj, acl5);
@@ -295,29 +315,33 @@ public class WebACRecipesIT extends AbstractResourceIT {
         try (final CloseableHttpResponse response = execute(patch)) {
             assertEquals(HttpStatus.SC_NO_CONTENT, getStatus(response));
         }
-        final String privateObj = ingestObj("/rest/mixedCollection/privateObj");
+        final String privateObj = ingestObj(idPrivate);
 
         logger.debug("Anonymous can see eg:publicImage " + publicObj);
-        final HttpGet request1 = getObjMethod(publicObj.replace(serverAddress, ""));
-        try (final CloseableHttpResponse response = execute(request1)) {
+        final HttpGet requestGet = getObjMethod(idPublic);
+        try (final CloseableHttpResponse response = execute(requestGet)) {
             assertEquals(HttpStatus.SC_OK, getStatus(response));
         }
 
         logger.debug("Anonymous can't see other resource " + privateObj);
-        final HttpGet request2 = getObjMethod(privateObj.replace(serverAddress, ""));
-        try (final CloseableHttpResponse response = execute(request2)) {
+        final HttpGet requestGet2 = getObjMethod(idPrivate);
+        try (final CloseableHttpResponse response = execute(requestGet2)) {
             assertEquals(HttpStatus.SC_FORBIDDEN, getStatus(response));
         }
 
         logger.debug("Admins can see eg:publicImage " + publicObj);
-        setAuth(request1, "Admins");
-        try (final CloseableHttpResponse response = execute(request1)) {
+        final HttpGet requestGet3 = getObjMethod(idPublic);
+        setAuth(requestGet3, "jones");
+        requestGet3.setHeader("some-header", "Admins");
+        try (final CloseableHttpResponse response = execute(requestGet3)) {
             assertEquals(HttpStatus.SC_OK, getStatus(response));
         }
 
         logger.debug("Admins can see others" + privateObj);
-        setAuth(request2, "Admins");
-        try (final CloseableHttpResponse response = execute(request2)) {
+        final HttpGet requestGet4 = getObjMethod(idPrivate);
+        setAuth(requestGet4, "jones");
+        requestGet4.setHeader("some-header", "Admins");
+        try (final CloseableHttpResponse response = execute(requestGet4)) {
             assertEquals(HttpStatus.SC_OK, getStatus(response));
         }
 

@@ -3,4 +3,4 @@
 <> a acl:Authorization ;
    acl:agent "Restricted" ;
    acl:mode acl:Read ;
-   acl:accessTo <http://localhost:8080/rest/dark/archive> .
+   acl:accessTo </rest/dark/archive> .

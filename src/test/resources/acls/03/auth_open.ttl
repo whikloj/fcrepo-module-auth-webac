@@ -4,4 +4,4 @@
 <> a acl:Authorization ;
    acl:agent foaf:Agent ;
    acl:mode acl:Read ;
-   acl:accessTo <http://localhost:8080/rest/dark/archive/sunshine> .
+   acl:accessTo </rest/dark/archive/sunshine> .

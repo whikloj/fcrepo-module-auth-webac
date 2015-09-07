@@ -66,7 +66,7 @@ public class WebACRolesProviderTest {
     private AccessRolesProvider roleProvider;
 
     private static final String FEDORA_PREFIX = "info:fedora";
-    private static final String FEDORA_URI_PREFIX = "http://localhost:8080/rest";
+    private static final String FEDORA_URI_PREFIX = "file:///rest";
 
     @Mock
     private Node mockNode;

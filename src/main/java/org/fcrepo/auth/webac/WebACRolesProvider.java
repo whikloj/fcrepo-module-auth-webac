@@ -15,22 +15,22 @@
  */
 package org.fcrepo.auth.webac;
 
+import static java.util.Collections.unmodifiableList;
 import static com.hp.hpl.jena.rdf.model.ModelFactory.createDefaultModel;
-import static org.fcrepo.kernel.api.utils.UncheckedFunction.uncheck;
-import static org.fcrepo.auth.webac.URIConstants.WEBAC_NAMESPACE_VALUE;
-import static org.fcrepo.auth.webac.URIConstants.WEBAC_AUTHORIZATION;
-import static org.fcrepo.auth.webac.URIConstants.WEBAC_ACCESSTO_VALUE;
-import static org.fcrepo.auth.webac.URIConstants.WEBAC_MODE_VALUE;
 import static org.fcrepo.auth.webac.URIConstants.WEBAC_ACCESSTO_CLASS_VALUE;
+import static org.fcrepo.auth.webac.URIConstants.WEBAC_ACCESSTO_VALUE;
+import static org.fcrepo.auth.webac.URIConstants.WEBAC_ACCESS_CONTROL_VALUE;
 import static org.fcrepo.auth.webac.URIConstants.WEBAC_AGENT_CLASS_VALUE;
 import static org.fcrepo.auth.webac.URIConstants.WEBAC_AGENT_VALUE;
-import static org.fcrepo.auth.webac.URIConstants.WEBAC_ACCESS_CONTROL_VALUE;
+import static org.fcrepo.auth.webac.URIConstants.WEBAC_AUTHORIZATION;
+import static org.fcrepo.auth.webac.URIConstants.WEBAC_MODE_VALUE;
+import static org.fcrepo.auth.webac.URIConstants.WEBAC_NAMESPACE_VALUE;
+import static org.fcrepo.kernel.api.utils.UncheckedFunction.uncheck;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.net.URI;
 import java.util.AbstractMap;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -71,6 +71,8 @@ class WebACRolesProvider implements AccessRolesProvider {
     private static final Logger LOGGER = getLogger(WebACRolesProvider.class);
 
     private static final String FEDORA_INTERNAL_PREFIX = "info:fedora";
+
+    private static final List<String> EMPTY = unmodifiableList(new ArrayList<>());
 
     @Autowired
     private NodeService nodeService;
@@ -128,7 +130,7 @@ class WebACRolesProvider implements AccessRolesProvider {
         // Create a function to check acl:accessTo, scoped to the given resourcePaths
         final Predicate<WebACAuthorization> checkAccessTo = accessTo.apply(resourcePaths);
 
-        // Create a function to check acl:accessToClass, scoped to the given rdf:type values;
+        // Create a function to check acl:accessToClass, scoped to the given rdf:type values,
         // but transform the URIs to Strings first.
         final Predicate<WebACAuthorization> checkAccessToClass =
             accessToClass.apply(rdfTypes.stream().map(URI::toString).collect(Collectors.toList()));
@@ -182,14 +184,12 @@ class WebACRolesProvider implements AccessRolesProvider {
      *  to whether the given acl:accessTo values contain any of the target resource values provided
      *  when creating the predicate.
      */
-    private Function<List<String>, Predicate<WebACAuthorization>> accessTo = uris -> {
-        return x -> {
-            return uris.stream()
-                       .distinct()
-                       .filter(y -> x.getAccessToURIs().contains(y))
-                       .findFirst()
-                       .isPresent();
-        };
+    private Function<List<String>, Predicate<WebACAuthorization>> accessTo = uris -> x -> {
+        return uris.stream()
+                   .distinct()
+                   .filter(y -> x.getAccessToURIs().contains(y))
+                   .findFirst()
+                   .isPresent();
     };
 
     /**
@@ -209,7 +209,6 @@ class WebACRolesProvider implements AccessRolesProvider {
     private List<WebACAuthorization> getAuthorizations(final String location) {
 
         final Session internalSession = sessionFactory.getInternalSession();
-        final List<String> EMPTY = Collections.unmodifiableList(new ArrayList<>());
         final List<WebACAuthorization> authorizations = new ArrayList<>();
         final IdentifierConverter<Resource, FedoraResource> translator =
                 new DefaultIdentifierTranslator(internalSession);
@@ -227,31 +226,35 @@ class WebACRolesProvider implements AccessRolesProvider {
             // Read each child resource, filtering on acl:Authorization type, keeping only acl-prefixed triples.
             resource.getChildren().forEachRemaining(child -> {
                 if (child.getTypes().contains(WEBAC_AUTHORIZATION)) {
-                    final Map<String, List<String>> tripleMap = new HashMap<>();
+                    final Map<String, List<String>> aclTriples = new HashMap<>();
                     child.getTriples(translator, PropertiesRdfContext.class)
                          .filter(p -> isAclPredicate.test(model.asStatement(p).getPredicate()))
                          .forEachRemaining(t -> {
-                            tripleMap.putIfAbsent(t.getPredicate().getURI(), new ArrayList<>());
+                            aclTriples.putIfAbsent(t.getPredicate().getURI(), new ArrayList<>());
                              if (t.getObject().isURI()) {
-                                tripleMap.get(t.getPredicate().getURI()).add(t.getObject().getURI());
+                                aclTriples.get(t.getPredicate().getURI()).add(t.getObject().getURI());
                              } else if (t.getObject().isLiteral()) {
-                                tripleMap.get(t.getPredicate().getURI()).add(
+                                aclTriples.get(t.getPredicate().getURI()).add(
                                     t.getObject().getLiteralValue().toString());
                              }
                          });
                     // Create a WebACAuthorization object from the provided triples.
                     LOGGER.debug("Adding acl:Authorization from {}", child.getPath());
-                    authorizations.add(new WebACAuthorization(
-                                tripleMap.getOrDefault(WEBAC_AGENT_VALUE, EMPTY),
-                                tripleMap.getOrDefault(WEBAC_AGENT_CLASS_VALUE, EMPTY),
-                                tripleMap.getOrDefault(WEBAC_MODE_VALUE, EMPTY).stream()
-                                            .map(URI::create).collect(Collectors.toList()),
-                                tripleMap.getOrDefault(WEBAC_ACCESSTO_VALUE, EMPTY),
-                                tripleMap.getOrDefault(WEBAC_ACCESSTO_CLASS_VALUE, EMPTY)));
+                    authorizations.add(createAuthorizationFromMap(aclTriples));
                 }
             });
         }
         return authorizations;
+    }
+
+    private static WebACAuthorization createAuthorizationFromMap(final Map<String, List<String>> data) {
+        return new WebACAuthorization(
+                    data.getOrDefault(WEBAC_AGENT_VALUE, EMPTY),
+                    data.getOrDefault(WEBAC_AGENT_CLASS_VALUE, EMPTY),
+                    data.getOrDefault(WEBAC_MODE_VALUE, EMPTY).stream()
+                                .map(URI::create).collect(Collectors.toList()),
+                    data.getOrDefault(WEBAC_ACCESSTO_VALUE, EMPTY),
+                    data.getOrDefault(WEBAC_ACCESSTO_CLASS_VALUE, EMPTY));
     }
 
     /**
@@ -268,18 +271,16 @@ class WebACRolesProvider implements AccessRolesProvider {
             final Model model = createDefaultModel();
 
             resource.getTriples(translator, PropertiesRdfContext.class)
-                .filter(p -> model.asStatement(p).getPredicate().hasURI(WEBAC_ACCESS_CONTROL_VALUE))
+                .filter(t -> model.asStatement(t).getPredicate().hasURI(WEBAC_ACCESS_CONTROL_VALUE))
+                .filter(t -> t.getObject().isURI())
                 .forEachRemaining(t -> {
-                    if (t.getObject().isURI()) {
-                        acls.add(t.getObject().getURI());
-                    }
+                    acls.add(t.getObject().getURI());
                 });
-            if (acls.size() > 0) {
+            if (!acls.isEmpty()) {
                 if (acls.size() > 1) {
-                    LOGGER.warn("Found multiple ACLs on this node. Using: {}", acls.get(0));
+                    LOGGER.warn("Found multiple ACLs defined for this node. Using: {}", acls.get(0));
                 }
-                return Optional.of(
-                        Pair.of(URI.create(acls.get(0)), resource));
+                return Optional.of(Pair.of(URI.create(acls.get(0)), resource));
             } else if (resource.getNode().getDepth() == 0) {
                 LOGGER.debug("No ACLs defined on this node or in parent hierarchy");
                 return Optional.empty();
@@ -288,11 +289,8 @@ class WebACRolesProvider implements AccessRolesProvider {
                 return getEffectiveAcl(resource.getContainer());
             }
         } catch (final RepositoryException ex) {
-            LOGGER.debug("Exception finding effective ACL: {}", ex);
+            LOGGER.debug("Exception finding effective ACL: {}", ex.getMessage());
             return Optional.empty();
-        } catch (final Exception ex) {
-            LOGGER.debug("Some other Exception", ex);
-            throw new RuntimeException(ex);
         }
     }
 }

@@ -28,7 +28,7 @@ import java.net.URI;
  * @see <a href="http://www.w3.org/ns/auth/acl">http://www.w3.org/ns/auth/acl</a>
  * @see <a href="http://fedora.info/definitions/v4/webac">http://fedora.info/definitions/v4/webac</a>
  */
-public class URIConstants {
+final public class URIConstants {
 
     /**
      * Namespace for the W3C WebAC vocabulary.

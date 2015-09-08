@@ -32,7 +32,7 @@ import org.junit.Test;
  * @author acoburn
  * @since 9/2/15
  */
-public class WebACAuthorizationImplTest {
+public class WebACAuthorizationTest {
 
     private final String AGENT1 = "me";
     private final String AGENT2 = "you";
@@ -52,7 +52,7 @@ public class WebACAuthorizationImplTest {
         final List<String> accessTo = Arrays.asList(ACCESS_TO1, ACCESS_TO2, ACCESS_TO3);
         final List<String> accessToClass = Arrays.asList(ACCESS_TO_CLASS1, ACCESS_TO_CLASS2);
 
-        final WebACAuthorization auth = new WebACAuthorizationImpl(agents, agentClasses,
+        final WebACAuthorization auth = new WebACAuthorization(agents, agentClasses,
                 modes, accessTo, accessToClass);
 
         assertEquals(2, auth.getAgents().size());
@@ -75,7 +75,7 @@ public class WebACAuthorizationImplTest {
         final Set<String> accessTo = new HashSet<>(Arrays.asList(ACCESS_TO1, ACCESS_TO2, ACCESS_TO3));
         final Set<String> accessToClass = new HashSet<>(Arrays.asList(ACCESS_TO_CLASS1, ACCESS_TO_CLASS2));
 
-        final WebACAuthorization auth = new WebACAuthorizationImpl(agents, agentClasses,
+        final WebACAuthorization auth = new WebACAuthorization(agents, agentClasses,
                 modes, accessTo, accessToClass);
 
         assertEquals(2, auth.getAgents().size());

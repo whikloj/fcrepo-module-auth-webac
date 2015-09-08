@@ -241,7 +241,7 @@ class WebACRolesProvider implements AccessRolesProvider {
                          });
                     // Create a WebACAuthorization object from the provided triples.
                     LOGGER.debug("Adding acl:Authorization from {}", child.getPath());
-                    authorizations.add(new WebACAuthorizationImpl(
+                    authorizations.add(new WebACAuthorization(
                                 tripleMap.getOrDefault(WEBAC_AGENT_VALUE, EMPTY),
                                 tripleMap.getOrDefault(WEBAC_AGENT_CLASS_VALUE, EMPTY),
                                 tripleMap.getOrDefault(WEBAC_MODE_VALUE, EMPTY).stream()

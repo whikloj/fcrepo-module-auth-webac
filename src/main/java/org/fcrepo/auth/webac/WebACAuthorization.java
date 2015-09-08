@@ -16,49 +16,87 @@
 package org.fcrepo.auth.webac;
 
 import java.net.URI;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Interface for WebAC Authorization objects.
- * 
  * @author whikloj
+ * @author acoburn
  * @since 2015-08-25
  */
-public interface WebACAuthorization {
+public class WebACAuthorization {
+
+    private final Set<String> agents = new HashSet<>();
+
+    private final Set<String> agentClasses = new HashSet<>();
+
+    private final Set<URI> modes = new HashSet<>();
+
+    private final Set<String> accessTo = new HashSet<>();
+
+    private final Set<String> accessToClass = new HashSet<>();
+
+    /**
+     * Constructor
+     *
+     * @param agents The acl:agent values
+     * @param agentClasses the acl:agentClass values
+     * @param modes the acl:mode values
+     * @param accessTo the acl:accessTo values
+     * @param accessToClass the acl:accessToClass values
+     */
+    public WebACAuthorization(final Collection<String> agents, final Collection<String> agentClasses,
+            final Collection<URI> modes, final Collection<String> accessTo, final Collection<String> accessToClass) {
+        this.agents.addAll(agents);
+        this.agentClasses.addAll(agentClasses);
+        this.modes.addAll(modes);
+        this.accessTo.addAll(accessTo);
+        this.accessToClass.addAll(accessToClass);
+    }
 
     /**
      * Get the set of acl:agents, empty set if none.
      *
      * @return set of acl:agents
      */
-    Set<String> getAgents();
+    public Set<String> getAgents() {
+        return agents;
+    }
 
     /**
      * Get the set of acl:agentClasses, empty set if none.
      * 
      * @return set of acl:agentClasses
      */
-    Set<String> getAgentClasses();
+    public Set<String> getAgentClasses() {
+        return agentClasses;
+    }
 
     /**
      * Get the set of acl:modes, empty set if none.
      *
      * @return set of acl:modes
      */
-    Set<URI> getModes();
+    public Set<URI> getModes() {
+        return modes;
+    }
 
     /**
      * Get the set of strings directly linked from this ACL, empty set if none.
      *
      * @return set of String
      */
-    Set<String> getAccessToURIs();
+    public Set<String> getAccessToURIs() {
+        return accessTo;
+    }
 
     /**
      * Get the set of strings describing the rdf:types for this ACL, empty set if none.
      *
      * @return set of Strings
      */
-    Set<String> getAccessToClassURIs();
-
+    public Set<String> getAccessToClassURIs() {
+        return accessToClass;
+    }
 }

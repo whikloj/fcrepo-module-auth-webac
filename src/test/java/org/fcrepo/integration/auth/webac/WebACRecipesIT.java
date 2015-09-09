@@ -35,6 +35,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.entity.StringEntity;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -104,6 +105,15 @@ public class WebACRecipesIT extends AbstractResourceIT {
      */
     private String ingestObj(final String path) throws IOException {
         final HttpPut request = putObjMethod(path.replace(serverAddress, ""));
+        setAuth(request, "fedoraAdmin");
+        try (final CloseableHttpResponse response = execute(request)) {
+            assertEquals(HttpStatus.SC_CREATED, response.getStatusLine().getStatusCode());
+            return response.getFirstHeader("Location").getValue();
+        }
+    }
+
+    private String ingestDatastream(final String path, final String ds) throws IOException {
+        final HttpPut request = putDSMethod(path, ds, "some not so random content");
         setAuth(request, "fedoraAdmin");
         try (final CloseableHttpResponse response = execute(request)) {
             assertEquals(HttpStatus.SC_CREATED, response.getStatusLine().getStatusCode());
@@ -345,5 +355,81 @@ public class WebACRecipesIT extends AbstractResourceIT {
             assertEquals(HttpStatus.SC_OK, getStatus(response));
         }
 
+    }
+
+    @Test
+    public void testAccessToRoot() throws IOException {
+        final String id = "/rest/" + getRandomUniqueId();
+        final String testObj = ingestObj(id);
+        final String acl = ingestAcl("fedoraAdmin", "/acls/06/acl.ttl", "/acls/06/authorization.ttl");
+
+        // Add ACL to root
+        linkToAcl("/rest/", acl);
+
+        logger.debug("Anonymous can't read");
+        final HttpGet request = getObjMethod(id);
+        try (final CloseableHttpResponse response = execute(request)) {
+            assertEquals(HttpStatus.SC_FORBIDDEN, getStatus(response));
+        }
+
+        logger.debug("Can username 'smith123' read {}", testObj);
+        final HttpGet requestGet1 = getObjMethod(id);
+        setAuth(requestGet1, "smith123");
+        try (final CloseableHttpResponse response = execute(requestGet1)) {
+            assertEquals(HttpStatus.SC_OK, getStatus(response));
+        }
+    }
+
+    @Test
+    @Ignore("FAILING")
+    public void testAccessToBinary() throws IOException {
+        // Block access to "book"
+        final String idBook = "/rest/book";
+        ingestObj(idBook);
+
+        // Open access datastream, "file"
+        final String id = idBook + "/file";
+        final String testObj = ingestDatastream(idBook, "file");
+        final String acl = ingestAcl("fedoraAdmin",
+                "/acls/07/acl.ttl",
+                "/acls/07/authorization.ttl",
+                "/acls/07/authorization-book.ttl");
+
+        linkToAcl(idBook, acl);
+
+        logger.debug("Anonymous can't read");
+        final HttpGet request = getObjMethod(id);
+        try (final CloseableHttpResponse response = execute(request)) {
+            assertEquals(HttpStatus.SC_FORBIDDEN, getStatus(response));
+        }
+
+        logger.debug("Can username 'smith123' read {}", testObj);
+        final HttpGet requestGet1 = getObjMethod(id);
+        setAuth(requestGet1, "smith123");
+        try (final CloseableHttpResponse response = execute(requestGet1)) {
+            assertEquals(HttpStatus.SC_OK, getStatus(response));
+        }
+    }
+
+    @Test
+    @Ignore("FAILING")
+    public void testAccessToHashResource() throws IOException {
+        final String id = "/rest/some/parent#hash-resource";
+        final String testObj = ingestObj(id);
+        final String acl = ingestAcl("fedoraAdmin", "/acls/08/acl.ttl", "/acls/08/authorization.ttl");
+        linkToAcl(testObj, acl);
+
+        logger.debug("Anonymous can't read");
+        final HttpGet request = getObjMethod(id);
+        try (final CloseableHttpResponse response = execute(request)) {
+            assertEquals(HttpStatus.SC_FORBIDDEN, getStatus(response));
+        }
+
+        logger.debug("Can username 'smith123' read {}", testObj);
+        final HttpGet requestGet1 = getObjMethod(id);
+        setAuth(requestGet1, "smith123");
+        try (final CloseableHttpResponse response = execute(requestGet1)) {
+            assertEquals(HttpStatus.SC_OK, getStatus(response));
+        }
     }
 }

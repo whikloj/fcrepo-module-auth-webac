@@ -18,12 +18,13 @@ package org.fcrepo.auth.webac;
 import static java.util.Collections.unmodifiableList;
 import static com.hp.hpl.jena.rdf.model.ModelFactory.createDefaultModel;
 import static org.apache.commons.lang3.StringUtils.substringBeforeLast;
+import static org.apache.jena.riot.Lang.TTL;
 import static org.fcrepo.auth.webac.URIConstants.FOAF_AGENT_VALUE;
 import static org.fcrepo.auth.webac.URIConstants.FOAF_MEMBER_VALUE;
 import static org.fcrepo.auth.webac.URIConstants.FOAF_GROUP;
+import static org.fcrepo.auth.webac.URIConstants.WEBAC_ACCESS_CONTROL_VALUE;
 import static org.fcrepo.auth.webac.URIConstants.WEBAC_ACCESSTO_CLASS_VALUE;
 import static org.fcrepo.auth.webac.URIConstants.WEBAC_ACCESSTO_VALUE;
-import static org.fcrepo.auth.webac.URIConstants.WEBAC_ACCESS_CONTROL_VALUE;
 import static org.fcrepo.auth.webac.URIConstants.WEBAC_AGENT_CLASS_VALUE;
 import static org.fcrepo.auth.webac.URIConstants.WEBAC_AGENT_VALUE;
 import static org.fcrepo.auth.webac.URIConstants.WEBAC_AUTHORIZATION;
@@ -35,9 +36,13 @@ import static org.fcrepo.kernel.modeshape.identifiers.NodeResourceConverter.node
 import static org.fcrepo.kernel.modeshape.utils.FedoraTypesUtils.isNonRdfSourceDescription;
 import static org.slf4j.LoggerFactory.getLogger;
 
+import java.io.File;
+import java.io.InputStream;
+import java.io.IOException;
 import java.net.URI;
 import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -48,6 +53,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import javax.jcr.Node;
@@ -69,21 +75,27 @@ import org.modeshape.jcr.value.Path;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.hp.hpl.jena.graph.Triple;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.Property;
 import com.hp.hpl.jena.rdf.model.Resource;
+import com.hp.hpl.jena.shared.JenaException;
 
 /**
  * @author acoburn
  * @since 9/3/15
  */
-class WebACRolesProvider implements AccessRolesProvider {
+public class WebACRolesProvider implements AccessRolesProvider {
+
+    public static final String ROOT_AUTHORIZATION_PROPERTY = "fcrepo.auth.webac.authorization";
 
     private static final Logger LOGGER = getLogger(WebACRolesProvider.class);
 
+    private static final List<String> EMPTY = unmodifiableList(new ArrayList<>());
+
     private static final String FEDORA_INTERNAL_PREFIX = "info:fedora";
 
-    private static final List<String> EMPTY = unmodifiableList(new ArrayList<>());
+    private static final String ROOT_AUTHORIZATION_LOCATION = "/root-authorization.ttl";
 
     @Autowired
     private NodeService nodeService;
@@ -139,6 +151,7 @@ class WebACRolesProvider implements AccessRolesProvider {
         // Construct a list of acceptable acl:accessTo values for the target resource.
         final List<String> resourcePaths = new ArrayList<>();
         resourcePaths.add(FEDORA_INTERNAL_PREFIX + resource.getPath());
+
         // Construct a list of acceptable acl:accessToClass values for the target resource.
         final List<URI> rdfTypes = resource.getTypes();
 
@@ -152,6 +165,16 @@ class WebACRolesProvider implements AccessRolesProvider {
                 rdfTypes.addAll(x.getTypes());
             });
 
+        // If we fall through to the system/classpath-based Authorization and it
+        // contains any acl:accessTo properties, it is necessary to add each ancestor
+        // path up the node hierarchy, starting at the resource location up to the
+        // root location. This way, the checkAccessTo predicate (below) can be properly
+        // created to match any acl:accessTo values that are part of the getDefaultAuthorization.
+        // This is not relevant if an effectiveAcl is present.
+        if (!effectiveAcl.isPresent()) {
+            resourcePaths.addAll(getAllPathAncestors(resource.getPath()));
+        }
+
         // Create a function to check acl:accessTo, scoped to the given resourcePaths
         final Predicate<WebACAuthorization> checkAccessTo = accessTo.apply(resourcePaths);
 
@@ -163,7 +186,7 @@ class WebACRolesProvider implements AccessRolesProvider {
         // Read the effective Acl and return a list of acl:Authorization statements
         final List<WebACAuthorization> authorizations = effectiveAcl
                 .map(uncheck(x -> getAuthorizations(x.getLeft().toString())))
-                .orElse(new ArrayList<>());
+                .orElseGet(() -> getDefaultAuthorizations());
 
         // Filter the acl:Authorization statements so that they correspond only to statements that apply to
         // the target (or acl-bearing ancestor) resource path or rdf:type.
@@ -190,6 +213,17 @@ class WebACRolesProvider implements AccessRolesProvider {
         return effectiveRoles.entrySet().stream()
             .map(x -> new AbstractMap.SimpleEntry<>(x.getKey(), new ArrayList<>(x.getValue())))
             .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+    }
+
+    /**
+     * Given a path (e.g. /a/b/c/d) retrieve a list of all ancestor paths.
+     * In this case, that would be a list of "/a/b/c", "/a/b", "/a" and "/".
+     */
+    private List<String> getAllPathAncestors(final String path) {
+        final List<String> segments = Arrays.asList(path.split("/"));
+        return IntStream.range(1, segments.size()).boxed()
+                    .map(x -> FEDORA_INTERNAL_PREFIX + "/" + String.join("/", segments.subList(1, x)))
+                    .collect(Collectors.toList());
     }
 
     /**
@@ -284,7 +318,7 @@ class WebACRolesProvider implements AccessRolesProvider {
     /**
      *  A simple predicate for filtering out any non-acl triples.
      */
-    final Predicate<Property> isAclPredicate =
+    static final Predicate<Property> isAclPredicate =
          p -> !p.isAnon() && p.getNameSpace().startsWith(WEBAC_NAMESPACE_VALUE);
 
     /**
@@ -383,5 +417,50 @@ class WebACRolesProvider implements AccessRolesProvider {
             LOGGER.debug("Exception finding effective ACL: {}", ex.getMessage());
             return Optional.empty();
         }
+    }
+
+    private List<WebACAuthorization> getDefaultAuthorizations() {
+        final Map<String, List<String>> aclTriples = new HashMap<>();
+        final List<WebACAuthorization> authorizations = new ArrayList<>();
+
+        getDefaultAcl().listStatements().forEachRemaining(x -> {
+            if (isAclPredicate.test(x.getPredicate())) {
+                final Triple t = x.asTriple();
+                aclTriples.putIfAbsent(t.getPredicate().getURI(), new ArrayList<>());
+                if (t.getObject().isURI()) {
+                    aclTriples.get(t.getPredicate().getURI()).add(t.getObject().getURI());
+                } else if (t.getObject().isLiteral()) {
+                    aclTriples.get(t.getPredicate().getURI()).add(
+                        t.getObject().getLiteralValue().toString());
+                }
+            }
+        });
+
+        authorizations.add(createAuthorizationFromMap(aclTriples));
+
+        return authorizations;
+    }
+
+    private static Model getDefaultAcl() {
+        final String rootAcl = System.getProperty(ROOT_AUTHORIZATION_PROPERTY);
+        final Model model = createDefaultModel();
+
+        if (rootAcl != null && new File(rootAcl).isFile()) {
+            try {
+                LOGGER.debug("Getting root authorization from file: {}", rootAcl);
+                return model.read(rootAcl);
+            } catch (final JenaException ex) {
+                LOGGER.error("Error parsing root authorization file: {}", ex.getMessage());
+            }
+        }
+        try (final InputStream is = WebACRolesProvider.class.getResourceAsStream(ROOT_AUTHORIZATION_LOCATION)) {
+            LOGGER.debug("Getting root authorization from classpath: {}", ROOT_AUTHORIZATION_LOCATION);
+            return model.read(is, null, TTL.getName());
+        } catch (final IOException ex) {
+            LOGGER.error("Error reading root authorization file: {}", ex.getMessage());
+        } catch (final JenaException ex) {
+            LOGGER.error("Error parsing root authorization file: {}", ex.getMessage());
+        }
+        return createDefaultModel();
     }
 }

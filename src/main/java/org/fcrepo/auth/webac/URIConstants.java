@@ -146,6 +146,18 @@ final public class URIConstants {
     public static final String FEDORA_WEBAC_ACL_VALUE = FEDORA_WEBAC_NAMESPACE_VALUE + "Acl";
     public static final URI FEDORA_WEBAC_ACL = URI.create(FEDORA_WEBAC_ACL_VALUE);
 
+    /**
+     * Fedora acl:Update mode
+     */
+    public static final String FEDORA_WEBAC_MODE_UPDATE_VALUE = FEDORA_WEBAC_NAMESPACE_VALUE + "Update";
+    public static final URI FEDORA_WEBAC_MODE_UPDATE = URI.create(FEDORA_WEBAC_MODE_UPDATE_VALUE);
+    
+    /**
+     * Fedora acl:Delete mode
+     */
+    public static final String FEDORA_WEBAC_MODE_DELETE_VALUE = FEDORA_WEBAC_NAMESPACE_VALUE + "Delete";
+    public static final URI FEDORA_WEBAC_MODE_DELETE = URI.create(FEDORA_WEBAC_MODE_DELETE_VALUE);
+    
     private URIConstants() {
     }
 

@@ -20,6 +20,8 @@ import static org.fcrepo.auth.webac.URIConstants.FOAF_AGENT_VALUE;
 import static org.fcrepo.auth.webac.URIConstants.WEBAC_MODE_CONTROL_VALUE;
 import static org.fcrepo.auth.webac.URIConstants.WEBAC_MODE_READ_VALUE;
 import static org.fcrepo.auth.webac.URIConstants.WEBAC_MODE_WRITE_VALUE;
+import static org.fcrepo.auth.webac.URIConstants.FEDORA_WEBAC_MODE_DELETE_VALUE;
+import static org.fcrepo.auth.webac.URIConstants.FEDORA_WEBAC_MODE_UPDATE_VALUE;
 import static org.modeshape.jcr.ModeShapePermissions.ADD_NODE;
 import static org.modeshape.jcr.ModeShapePermissions.MODIFY_ACCESS_CONTROL;
 import static org.modeshape.jcr.ModeShapePermissions.READ;
@@ -33,6 +35,7 @@ import java.security.Principal;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.jcr.Session;
@@ -68,6 +71,12 @@ public class WebACAuthorizationDelegate extends AbstractRolesAuthorizationDelega
         map.put(REMOVE, WEBAC_MODE_WRITE_VALUE);
         map.put(REMOVE_CHILD_NODES, WEBAC_MODE_WRITE_VALUE);
         map.put(SET_PROPERTY, WEBAC_MODE_WRITE_VALUE);
+        // FEDORA_WEBAC_MODE_DELETE Permissions
+        map.put(REMOVE, FEDORA_WEBAC_MODE_DELETE_VALUE);
+        map.put(REMOVE_CHILD_NODES, FEDORA_WEBAC_MODE_DELETE_VALUE);
+        // FEDORA_WEBAC_MODE_UPDATE Permissions
+        map.put(SET_PROPERTY, FEDORA_WEBAC_MODE_UPDATE_VALUE);
+        map.put(REMOVE, FEDORA_WEBAC_MODE_UPDATE_VALUE);
         // WEBAC_MODE_CONTROL Permissions
         map.put(MODIFY_ACCESS_CONTROL, WEBAC_MODE_CONTROL_VALUE);
         map.put(READ_ACCESS_CONTROL, WEBAC_MODE_CONTROL_VALUE);
@@ -115,6 +124,16 @@ public class WebACAuthorizationDelegate extends AbstractRolesAuthorizationDelega
                  .filter(x -> !roles.contains(x))
                  .findFirst()
                  .isPresent();
+
+        final Optional<String> tmplist = Arrays.asList(actions).stream().map(actionMap::get)
+                .filter(x -> !roles.contains(x))
+                .findFirst();
+        if (tmplist.isPresent()) {
+            LOGGER.debug("The tmplist action is {} for all actions {} with roles {}",
+                    tmplist,
+                    actions,
+                    roles);
+        }
 
         LOGGER.debug("Request for actions: {}, on path: {}, with roles: {}. Permission={}",
                 actions,

@@ -18,6 +18,8 @@ package org.fcrepo.auth.webac;
 import static org.fcrepo.auth.webac.URIConstants.WEBAC_MODE_CONTROL_VALUE;
 import static org.fcrepo.auth.webac.URIConstants.WEBAC_MODE_READ_VALUE;
 import static org.fcrepo.auth.webac.URIConstants.WEBAC_MODE_WRITE_VALUE;
+import static org.fcrepo.auth.webac.URIConstants.FEDORA_WEBAC_MODE_DELETE_VALUE;
+import static org.fcrepo.auth.webac.URIConstants.FEDORA_WEBAC_MODE_UPDATE_VALUE;
 import static org.modeshape.jcr.ModeShapePermissions.ADD_NODE;
 import static org.modeshape.jcr.ModeShapePermissions.MODIFY_ACCESS_CONTROL;
 import static org.modeshape.jcr.ModeShapePermissions.READ;
@@ -198,6 +200,42 @@ public class WebACAuthorizationDelegateTest {
         final String[] actions = {MODIFY_ACCESS_CONTROL};
         final Set<String> roles = new HashSet<>();
         roles.add(WEBAC_MODE_WRITE_VALUE);
+
+        assertFalse(webacAD.rolesHavePermission(mockSession, "/fake/path", actions, roles));
+    }
+
+    @Test
+    public void testCanDelete1() {
+        final String[] actions = { REMOVE, REMOVE_CHILD_NODES };
+        final Set<String> roles = new HashSet<>();
+        roles.add(FEDORA_WEBAC_MODE_DELETE_VALUE);
+
+        assertTrue(webacAD.rolesHavePermission(mockSession, "/fake/path", actions, roles));
+    }
+
+    @Test
+    public void testCannotDelete1() {
+        final String[] actions = { REMOVE, REMOVE_CHILD_NODES };
+        final Set<String> roles = new HashSet<>();
+        roles.add(WEBAC_MODE_READ_VALUE);
+
+        assertFalse(webacAD.rolesHavePermission(mockSession, "/fake/path", actions, roles));
+    }
+
+    @Test
+    public void testCanUpdate1() {
+        final String[] actions = { SET_PROPERTY };
+        final Set<String> roles = new HashSet<>();
+        roles.add(FEDORA_WEBAC_MODE_UPDATE_VALUE);
+
+        assertTrue(webacAD.rolesHavePermission(mockSession, "/fake/path", actions, roles));
+    }
+
+    @Test
+    public void testCannotUpdate1() {
+        final String[] actions = { SET_PROPERTY };
+        final Set<String> roles = new HashSet<>();
+        roles.add(FEDORA_WEBAC_MODE_DELETE_VALUE);
 
         assertFalse(webacAD.rolesHavePermission(mockSession, "/fake/path", actions, roles));
     }

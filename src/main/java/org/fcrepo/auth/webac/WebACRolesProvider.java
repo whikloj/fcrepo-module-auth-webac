@@ -17,6 +17,9 @@ package org.fcrepo.auth.webac;
 
 import static java.util.Collections.unmodifiableList;
 import static com.hp.hpl.jena.rdf.model.ModelFactory.createDefaultModel;
+import static org.fcrepo.auth.webac.URIConstants.FOAF_AGENT_VALUE;
+import static org.fcrepo.auth.webac.URIConstants.FOAF_MEMBER_VALUE;
+import static org.fcrepo.auth.webac.URIConstants.FOAF_GROUP;
 import static org.fcrepo.auth.webac.URIConstants.WEBAC_ACCESSTO_CLASS_VALUE;
 import static org.fcrepo.auth.webac.URIConstants.WEBAC_ACCESSTO_VALUE;
 import static org.fcrepo.auth.webac.URIConstants.WEBAC_ACCESS_CONTROL_VALUE;
@@ -31,6 +34,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 import java.net.URI;
 import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -40,6 +44,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
@@ -148,7 +153,8 @@ class WebACRolesProvider implements AccessRolesProvider {
         authorizations.stream()
             .filter(x -> checkAccessTo.test(x) || checkAccessToClass.test(x))
             .forEach(x -> {
-                x.getAgents().stream()
+                Stream.concat(x.getAgents().stream(), dereferenceAgentClasses(x.getAgentClasses()).stream())
+                    .distinct()
                     .forEach(y -> {
                         effectiveRoles.putIfAbsent(y, new HashSet<>());
                         effectiveRoles.get(y).addAll(
@@ -190,6 +196,69 @@ class WebACRolesProvider implements AccessRolesProvider {
                    .filter(y -> x.getAccessToURIs().contains(y))
                    .findFirst()
                    .isPresent();
+    };
+
+    /**
+     *  This maps a Collection of acl:agentClass values to a List of agents.
+     *  Any out-of-domain URIs are silently ignored.
+     */
+    private List<String> dereferenceAgentClasses(final Collection<String> agentClasses) {
+        final Session internalSession = sessionFactory.getInternalSession();
+        final IdentifierConverter<Resource, FedoraResource> translator =
+                new DefaultIdentifierTranslator(internalSession);
+
+        final List<String> members = new ArrayList<>();
+        agentClasses.stream()
+                    .distinct()
+                    .forEach(x -> {
+                        if (x.startsWith(FEDORA_INTERNAL_PREFIX)) {
+                            final FedoraResource resource = nodeService.find(
+                                internalSession, x.substring(FEDORA_INTERNAL_PREFIX.length()));
+                            members.addAll(getAgentMembers(translator, resource));
+                        } else if (x.equals(FOAF_AGENT_VALUE)) {
+                            members.add(x);
+                        } else {
+                            LOGGER.info("Ignoring agentClass: {}", x);
+                        }
+                    });
+
+        if (LOGGER.isDebugEnabled() && !agentClasses.isEmpty()) {
+            LOGGER.debug("Found {} members in {} agentClass resources", members.size(), agentClasses.size());
+        }
+
+        return members;
+    }
+
+    /**
+     *  Given a FedoraResource, return a list of agents.
+     */
+    private Set<String> getAgentMembers(final IdentifierConverter<Resource, FedoraResource> translator,
+            final FedoraResource resource) {
+        final Set<String> members = new HashSet<>();
+        final Model model = createDefaultModel();
+
+        final Predicate<Property> isMember = memberTestFromTypes.apply(resource.getTypes());
+
+        resource.getTriples(translator, PropertiesRdfContext.class)
+            .filter(p -> isMember.test(model.asStatement(p).getPredicate()))
+            .forEachRemaining(t -> {
+                if (t.getObject().isURI()) {
+                    members.add(t.getObject().getURI());
+                } else if (t.getObject().isLiteral()) {
+                    members.add(t.getObject().getLiteralValue().toString());
+                }
+            });
+
+        return members;
+    }
+
+    /**
+     *  A simple predicate for filtering out any non-foaf:member properties
+     */
+    final Function<List<URI>, Predicate<Property>> memberTestFromTypes = types -> {
+        final Set<URI> typeLookup = new HashSet<>(types);
+        return p -> !p.isAnon() &&
+            typeLookup.contains(FOAF_GROUP) && p.getURI().equals(FOAF_MEMBER_VALUE);
     };
 
     /**

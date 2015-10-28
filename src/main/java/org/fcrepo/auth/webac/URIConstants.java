@@ -135,6 +135,19 @@ final public class URIConstants {
     public static final URI FOAF_AGENT = URI.create(FOAF_AGENT_VALUE);
 
     /**
+     * FOAF member
+     */
+    public static final String FOAF_MEMBER_VALUE = FOAF_NAMESPACE_VALUE + "member";
+    public static final URI FOAF_MEMBER = URI.create(FOAF_MEMBER_VALUE);
+
+    /**
+     * FOAF Group
+     */
+    public static final String FOAF_GROUP_VALUE = FOAF_NAMESPACE_VALUE + "Group";
+    public static final URI FOAF_GROUP = URI.create(FOAF_GROUP_VALUE);
+
+
+    /**
      * Fedora WebAC Namespace
      */
     public static final String FEDORA_WEBAC_NAMESPACE_VALUE = "http://fedora.info/definitions/v4/webac#";

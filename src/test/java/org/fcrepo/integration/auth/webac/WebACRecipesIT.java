@@ -432,4 +432,45 @@ public class WebACRecipesIT extends AbstractResourceIT {
             assertEquals(HttpStatus.SC_OK, getStatus(response));
         }
     }
+
+    @Test
+    public void testAccessToVersionedResources() throws IOException {
+        final String idVersion = "/rest/versionResource";
+        ingestObj(idVersion);
+
+        final HttpPatch patch1 = patchObjMethod(idVersion);
+        setAuth(patch1, "fedoraAdmin");
+        patch1.addHeader("Content-type", "application/sparql-update");
+        patch1.setEntity(
+                new StringEntity("PREFIX pcdm: <http://pcdm.org/models#> INSERT { <> a pcdm:Object } WHERE {}"));
+        try (final CloseableHttpResponse response = execute(patch1)) {
+            assertEquals(HttpStatus.SC_NO_CONTENT, getStatus(response));
+        }
+
+        final String acl = ingestAcl("fedoraAdmin",
+                "/acls/10/acl.ttl",
+                "/acls/10/authorization.ttl");
+
+        linkToAcl(idVersion, acl);
+
+        final HttpGet requestGet1 = getObjMethod(idVersion);
+        setAuth(requestGet1, "testuser");
+        try (final CloseableHttpResponse response = execute(requestGet1)) {
+            assertEquals("testuser can't read object", HttpStatus.SC_OK, getStatus(response));
+        }
+
+        final HttpPost requestPost1 = postObjMethod(idVersion + "/fcr:versions");
+        requestPost1.addHeader("Slug", "v0");
+        setAuth(requestPost1, "fedoraAdmin");
+        try (final CloseableHttpResponse response = execute(requestPost1)) {
+            assertEquals("Unable to create a new version", HttpStatus.SC_CREATED, getStatus(response));
+        }
+
+        final HttpGet requestGet2 = getObjMethod(idVersion);
+        setAuth(requestGet2, "testuser");
+        try (final CloseableHttpResponse response = execute(requestGet2)) {
+            assertEquals("testuser can't read versioned object", HttpStatus.SC_OK, getStatus(response));
+        }
+    }
+
 }

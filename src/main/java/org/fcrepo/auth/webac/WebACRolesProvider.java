@@ -17,6 +17,7 @@ package org.fcrepo.auth.webac;
 
 import static java.util.Collections.unmodifiableList;
 import static com.hp.hpl.jena.rdf.model.ModelFactory.createDefaultModel;
+import static org.apache.commons.lang3.StringUtils.substringBeforeLast;
 import static org.fcrepo.auth.webac.URIConstants.FOAF_AGENT_VALUE;
 import static org.fcrepo.auth.webac.URIConstants.FOAF_MEMBER_VALUE;
 import static org.fcrepo.auth.webac.URIConstants.FOAF_GROUP;
@@ -28,7 +29,10 @@ import static org.fcrepo.auth.webac.URIConstants.WEBAC_AGENT_VALUE;
 import static org.fcrepo.auth.webac.URIConstants.WEBAC_AUTHORIZATION;
 import static org.fcrepo.auth.webac.URIConstants.WEBAC_MODE_VALUE;
 import static org.fcrepo.auth.webac.URIConstants.WEBAC_NAMESPACE_VALUE;
+import static org.fcrepo.kernel.api.FedoraJcrTypes.JCR_CONTENT;
 import static org.fcrepo.kernel.api.utils.UncheckedFunction.uncheck;
+import static org.fcrepo.kernel.modeshape.identifiers.NodeResourceConverter.nodeConverter;
+import static org.fcrepo.kernel.modeshape.utils.FedoraTypesUtils.isNonRdfSourceDescription;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.net.URI;
@@ -54,6 +58,7 @@ import org.fcrepo.auth.roles.common.AccessRolesProvider;
 import org.fcrepo.http.commons.session.SessionFactory;
 import org.fcrepo.kernel.api.identifiers.IdentifierConverter;
 import org.fcrepo.kernel.api.models.FedoraResource;
+import org.fcrepo.kernel.api.models.NonRdfSourceDescription;
 import org.fcrepo.kernel.api.services.NodeService;
 import org.fcrepo.kernel.modeshape.rdf.impl.DefaultIdentifierTranslator;
 import org.fcrepo.kernel.modeshape.rdf.impl.PropertiesRdfContext;
@@ -114,7 +119,10 @@ class WebACRolesProvider implements AccessRolesProvider {
         LOGGER.debug("Getting agent roles for: {}", resource.getPath());
 
         // Get the effective ACL by searching the target node and any ancestors.
-        final Optional<Pair<URI, FedoraResource>> effectiveAcl = getEffectiveAcl(resource);
+        final Optional<Pair<URI, FedoraResource>> effectiveAcl = getEffectiveAcl(
+                isNonRdfSourceDescription.test(resource.getNode()) ?
+                    ((NonRdfSourceDescription)nodeConverter.convert(resource.getNode())).getDescribedResource() :
+                     resource);
 
         // Construct a list of acceptable acl:accessTo values for the target resource.
         final List<String> resourcePaths = new ArrayList<>();
@@ -301,7 +309,8 @@ class WebACRolesProvider implements AccessRolesProvider {
                          .forEachRemaining(t -> {
                             aclTriples.putIfAbsent(t.getPredicate().getURI(), new ArrayList<>());
                              if (t.getObject().isURI()) {
-                                aclTriples.get(t.getPredicate().getURI()).add(t.getObject().getURI());
+                                 aclTriples.get(t.getPredicate().getURI()).add(
+                                     substringBeforeLast(t.getObject().getURI(), "/" + JCR_CONTENT));
                              } else if (t.getObject().isLiteral()) {
                                 aclTriples.get(t.getPredicate().getURI()).add(
                                     t.getObject().getLiteralValue().toString());
@@ -345,6 +354,7 @@ class WebACRolesProvider implements AccessRolesProvider {
                 .forEachRemaining(t -> {
                     acls.add(t.getObject().getURI());
                 });
+
             if (!acls.isEmpty()) {
                 if (acls.size() > 1) {
                     LOGGER.warn("Found multiple ACLs defined for this node. Using: {}", acls.get(0));

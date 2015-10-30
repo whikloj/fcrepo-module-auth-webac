@@ -417,7 +417,6 @@ public class WebACRecipesIT extends AbstractResourceIT {
     }
 
     @Test
-    @Ignore("FAILING")
     public void testAccessToBinary() throws IOException {
         // Block access to "book"
         final String idBook = "/rest/book";
@@ -431,20 +430,17 @@ public class WebACRecipesIT extends AbstractResourceIT {
                 "/acls/07/authorization.ttl",
                 "/acls/07/authorization-book.ttl");
 
-        linkToAcl(idBook, acl);
+        linkToAcl(id + "/fcr:metadata", acl);
 
         logger.debug("Anonymous can't read");
-        final HttpGet request = getObjMethod(id);
-        try (final CloseableHttpResponse response = execute(request)) {
-            assertEquals(HttpStatus.SC_FORBIDDEN, getStatus(response));
-        }
+        final HttpGet requestGet1 = getObjMethod(id);
+        assertEquals(HttpStatus.SC_FORBIDDEN, getStatus(requestGet1));
 
         logger.debug("Can username 'smith123' read {}", testObj);
-        final HttpGet requestGet1 = getObjMethod(id);
-        setAuth(requestGet1, "smith123");
-        try (final CloseableHttpResponse response = execute(requestGet1)) {
-            assertEquals(HttpStatus.SC_OK, getStatus(response));
-        }
+        final HttpGet requestGet2 = getObjMethod(id);
+
+        setAuth(requestGet2, "smith123");
+        assertEquals(HttpStatus.SC_OK, getStatus(requestGet2));
     }
 
     @Test

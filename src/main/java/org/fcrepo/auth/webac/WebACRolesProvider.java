@@ -98,8 +98,8 @@ class WebACRolesProvider implements AccessRolesProvider {
     @Override
     public Map<String, List<String>> findRolesForPath(final Path absPath, final Session session)
             throws RepositoryException {
-        LOGGER.debug("findRolesForPath: {}", absPath.getString());
-        return getAgentRoles(nodeService.find(session, absPath.getString()));
+        LOGGER.debug("findRolesForPath: {}", absPath.toString());
+        return getAgentRoles(nodeService.find(session, absPath.toString()));
     }
 
     @Override

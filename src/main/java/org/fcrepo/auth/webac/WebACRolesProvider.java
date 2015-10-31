@@ -31,9 +31,9 @@ import static org.fcrepo.auth.webac.URIConstants.WEBAC_AUTHORIZATION;
 import static org.fcrepo.auth.webac.URIConstants.WEBAC_MODE_VALUE;
 import static org.fcrepo.auth.webac.URIConstants.WEBAC_NAMESPACE_VALUE;
 import static org.fcrepo.kernel.api.FedoraJcrTypes.JCR_CONTENT;
-import static org.fcrepo.kernel.api.utils.UncheckedFunction.uncheck;
 import static org.fcrepo.kernel.modeshape.identifiers.NodeResourceConverter.nodeConverter;
 import static org.fcrepo.kernel.modeshape.utils.FedoraTypesUtils.isNonRdfSourceDescription;
+import static org.fcrepo.kernel.modeshape.utils.UncheckedFunction.uncheck;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.File;
@@ -66,9 +66,9 @@ import org.fcrepo.kernel.api.identifiers.IdentifierConverter;
 import org.fcrepo.kernel.api.models.FedoraResource;
 import org.fcrepo.kernel.api.models.NonRdfSourceDescription;
 import org.fcrepo.kernel.api.services.NodeService;
-import org.fcrepo.kernel.api.utils.UncheckedPredicate;
 import org.fcrepo.kernel.modeshape.rdf.impl.DefaultIdentifierTranslator;
 import org.fcrepo.kernel.modeshape.rdf.impl.PropertiesRdfContext;
+import org.fcrepo.kernel.modeshape.utils.UncheckedPredicate;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.modeshape.jcr.value.Path;

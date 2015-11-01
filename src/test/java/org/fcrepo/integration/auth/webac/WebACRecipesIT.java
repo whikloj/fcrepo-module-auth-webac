@@ -297,6 +297,40 @@ public class WebACRecipesIT extends AbstractResourceIT {
             assertEquals(HttpStatus.SC_NO_CONTENT, getStatus(response));
         }
 
+        logger.debug("Editors can create (PUT) child objects of " + testObj);
+        final HttpPut requestPut1 = putObjMethod(id + "/child1");
+        setAuth(requestPut1, "jones");
+        requestPut1.setHeader("some-header", "Editors");
+        assertEquals(HttpStatus.SC_CREATED, getStatus(requestPut1));
+
+        final HttpGet requestGet4 = getObjMethod(id + "/child1");
+        setAuth(requestGet4, "jones");
+        requestGet4.setHeader("some-header", "Editors");
+        assertEquals(HttpStatus.SC_OK, getStatus(requestGet4));
+
+        logger.debug("Editors can create (POST) child objects of " + testObj);
+        final HttpPost requestPost1 = postObjMethod(id);
+        requestPost1.addHeader("Slug", "child2");
+        setAuth(requestPost1, "jones");
+        requestPost1.setHeader("some-header", "Editors");
+        assertEquals(HttpStatus.SC_CREATED, getStatus(requestPost1));
+
+        final HttpGet requestGet5 = getObjMethod(id + "/child2");
+        setAuth(requestGet5, "jones");
+        requestGet5.setHeader("some-header", "Editors");
+        assertEquals(HttpStatus.SC_OK, getStatus(requestGet5));
+
+        logger.debug("Editors can create nested child objects of " + testObj);
+        final HttpPut requestPut2 = putObjMethod(id + "/a/b/c/child");
+        setAuth(requestPut2, "jones");
+        requestPut2.setHeader("some-header", "Editors");
+        assertEquals(HttpStatus.SC_CREATED, getStatus(requestPut2));
+
+        final HttpGet requestGet6 = getObjMethod(id + "/a/b/c/child");
+        setAuth(requestGet6, "jones");
+        requestGet6.setHeader("some-header", "Editors");
+        assertEquals(HttpStatus.SC_OK, getStatus(requestGet6));
+
         logger.debug("Smith can't write " + testObj);
         final HttpPatch requestPatch3 = patchObjMethod(id);
         requestPatch3.setHeader("Content-type", "application/sparql-update");

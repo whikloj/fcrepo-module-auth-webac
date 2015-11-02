@@ -16,13 +16,20 @@
 package org.fcrepo.integration.auth.webac;
 
 import static javax.ws.rs.core.Response.Status.CREATED;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.fcrepo.auth.webac.URIConstants.WEBAC_ACCESS_CONTROL_VALUE;
 import static org.fcrepo.auth.webac.WebACRolesProvider.ROOT_AUTHORIZATION_PROPERTY;
 import static org.fcrepo.kernel.api.RdfLexicon.DC_NAMESPACE;
-import static org.junit.Assert.assertEquals;
-
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
+import java.util.Optional;
+
+import javax.ws.rs.core.Link;
+
+import org.fcrepo.integration.http.api.AbstractResourceIT;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.http.HttpResponse;
@@ -32,10 +39,10 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPatch;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
+import org.apache.http.message.AbstractHttpMessage;
+import org.apache.http.Header;
 import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.message.AbstractHttpMessage;
-import org.fcrepo.integration.http.api.AbstractResourceIT;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -156,6 +163,7 @@ public class WebACRecipesIT extends AbstractResourceIT {
         final String testObj = ingestObj("/rest/webacl_box1");
         final String acl1 = ingestAcl("fedoraAdmin", "/acls/01/acl.ttl", "/acls/01/authorization.ttl");
         linkToAcl(testObj, acl1);
+        final String aclLink = Link.fromUri(acl1).rel("acl").build().toString();
 
         logger.debug("Anonymous can't read");
         final HttpGet request = getObjMethod(testObj.replace(serverAddress, ""));
@@ -163,7 +171,14 @@ public class WebACRecipesIT extends AbstractResourceIT {
 
         logger.debug("Can username 'smith123' read " + testObj);
         setAuth(request, "smith123");
-        assertEquals(HttpStatus.SC_OK, getStatus(request));
+        try (final CloseableHttpResponse response = execute(request)) {
+            assertEquals(HttpStatus.SC_OK, getStatus(response));
+
+            final Optional<String> header = Arrays.asList(response.getHeaders("Link")).stream().map(Header::getValue)
+                    .filter(aclLink::equals).findFirst();
+            assertTrue("Missing Link header", header.isPresent());
+        }
+
     }
 
     @Test

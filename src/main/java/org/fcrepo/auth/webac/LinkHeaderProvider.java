@@ -19,23 +19,26 @@ import static com.hp.hpl.jena.rdf.model.ModelFactory.createDefaultModel;
 import static org.fcrepo.auth.webac.URIConstants.WEBAC_ACCESS_CONTROL_VALUE;
 import static org.slf4j.LoggerFactory.getLogger;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-
 import javax.jcr.Session;
-import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.core.UriInfo;
+
 import org.fcrepo.http.commons.api.UriAwareHttpHeaderFactory;
+import org.fcrepo.http.commons.session.SessionFactory;
 import org.fcrepo.kernel.api.identifiers.IdentifierConverter;
 import org.fcrepo.kernel.api.models.FedoraResource;
+import org.fcrepo.kernel.api.services.NodeService;
 import org.fcrepo.kernel.modeshape.rdf.impl.DefaultIdentifierTranslator;
 import org.fcrepo.kernel.modeshape.rdf.impl.PropertiesRdfContext;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ListMultimap;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.Resource;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 /**
  * Insert WebAC Link headers to responses
@@ -43,31 +46,39 @@ import com.hp.hpl.jena.rdf.model.Resource;
  * @author whikloj
  * @since 2015-10-30
  */
+@Component
 public class LinkHeaderProvider implements UriAwareHttpHeaderFactory {
 
     private static final Logger LOGGER = getLogger(LinkHeaderProvider.class);
 
+    @Autowired
+    private SessionFactory sessionFactory;
+
+    @Autowired
+    private NodeService nodeService;
+
     @Override
-    public Optional<List<Pair<String, String>>> createHttpHeadersForResource(final HttpServletResponse servletResponse,
-            final FedoraResource resource, final Session session) {
+    public ListMultimap<String, String> createHttpHeadersForResource(final UriInfo uriInfo,
+            final FedoraResource resource) {
+
+        final Session internalSession = sessionFactory.getInternalSession();
         final IdentifierConverter<Resource, FedoraResource> translator =
-                new DefaultIdentifierTranslator(session);
-        final List<Pair<String, String>> acls = new ArrayList<>();
+                new DefaultIdentifierTranslator(internalSession);
         final Model model = createDefaultModel();
+        final ListMultimap<String, String> headers = ArrayListMultimap.create();
 
-        LOGGER.debug("Inside LinkHeaderProvider");
+        LOGGER.debug("Adding WebAC Link Header for Resource: {}", resource);
 
-        resource.getTriples(translator, PropertiesRdfContext.class)
+        nodeService.find(internalSession, resource.getPath()).getTriples(translator, PropertiesRdfContext.class)
         .filter(t -> model.asStatement(t).getPredicate().hasURI(WEBAC_ACCESS_CONTROL_VALUE))
         .filter(t -> t.getObject().isURI())
         .forEachRemaining(t -> {
-                    acls.add(Pair.of("Link", t.getObject().getURI() + "; rel=acl"));
+            headers.put("Link", uriInfo.getBaseUriBuilder()
+                    .path(translator.convert(model.asStatement(t).getObject().asResource()).getPath()) +
+                    "; rel=\"acl\"");
         });
-        if (acls.size() > 0) {
-            return Optional.of(acls);
-        } else {
-            return Optional.empty();
-        }
+
+        return headers;
     }
 
 

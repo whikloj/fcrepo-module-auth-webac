@@ -22,6 +22,7 @@ import static org.fcrepo.kernel.api.RdfLexicon.DC_NAMESPACE;
 
 import java.io.IOException;
 import java.io.InputStream;
+
 import org.fcrepo.integration.http.api.AbstractResourceIT;
 
 import org.apache.commons.codec.binary.Base64;
@@ -31,6 +32,7 @@ import org.apache.http.client.methods.HttpPatch;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.message.AbstractHttpMessage;
+import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.entity.InputStreamEntity;
@@ -157,6 +159,7 @@ public class WebACRecipesIT extends AbstractResourceIT {
         final String testObj = ingestObj("/rest/webacl_box1");
         final String acl1 = ingestAcl("fedoraAdmin", "/acls/01/acl.ttl", "/acls/01/authorization.ttl");
         linkToAcl(testObj, acl1);
+        final String aclLink = acl1 + "; rel=\"acl\"";
 
         logger.debug("Anonymous can't read");
         final HttpGet request = getObjMethod(testObj.replace(serverAddress, ""));
@@ -168,7 +171,15 @@ public class WebACRecipesIT extends AbstractResourceIT {
         setAuth(request, "smith123");
         try (final CloseableHttpResponse response = execute(request)) {
             assertEquals(HttpStatus.SC_OK, getStatus(response));
+            for (final Header header : response.getHeaders("Link")) {
+                logger.debug("Link header: {}", header.getValue());
+                if (header.getValue().equals(aclLink)) {
+                    return;
+                }
+            }
+            assertEquals("Missing Link Header " + aclLink.toString(), 1, 0);
         }
+
     }
 
     @Test

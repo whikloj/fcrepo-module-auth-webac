@@ -128,13 +128,13 @@ public class WebACRolesProviderTest {
 
         when(mockResource.getPath()).thenReturn(accessTo);
         when(mockResource.getContainer()).thenReturn(mockParentResource);
-        when(mockResource.getTriples(anyObject(),
-                    eq(PropertiesRdfContext.class))).thenReturn(new RdfStream());
+        when(mockResource.getTriples(anyObject(), eq(PropertiesRdfContext.class)))
+                .thenReturn(new RdfStream());
         when(mockNode.getDepth()).thenReturn(1);
 
         when(mockParentResource.getNode()).thenReturn(mockParentNode);
-        when(mockParentResource.getTriples(anyObject(),
-                    eq(PropertiesRdfContext.class))).thenReturn(new RdfStream());
+        when(mockParentResource.getTriples(anyObject(), eq(PropertiesRdfContext.class)))
+                .thenReturn(new RdfStream());
         when(mockParentNode.getDepth()).thenReturn(0);
 
         final Map<String, List<String>> roles = roleProvider.getRoles(mockNode, true);
@@ -197,8 +197,8 @@ public class WebACRolesProviderTest {
 
         when(mockAuthorizationResource1.getTypes()).thenReturn(Arrays.asList(WEBAC_AUTHORIZATION));
         when(mockAuthorizationResource1.getPath()).thenReturn(auth);
-        when(mockAuthorizationResource1.getTriples(anyObject(),
-                    eq(PropertiesRdfContext.class))).thenReturn(getRdfStreamFromResource(auth, TTL));
+        when(mockAuthorizationResource1.getTriples(anyObject(), eq(PropertiesRdfContext.class)))
+                .thenReturn(getRdfStreamFromResource(auth, TTL));
 
         when(mockAclResource.getChildren()).thenReturn(Arrays.asList(mockAuthorizationResource1).iterator());
 
@@ -225,8 +225,8 @@ public class WebACRolesProviderTest {
 
         when(mockAuthorizationResource1.getTypes()).thenReturn(Arrays.asList(WEBAC_AUTHORIZATION));
         when(mockAuthorizationResource1.getPath()).thenReturn(auth);
-        when(mockAuthorizationResource1.getTriples(anyObject(),
-                    eq(PropertiesRdfContext.class))).thenReturn(getRdfStreamFromResource(auth, TTL));
+        when(mockAuthorizationResource1.getTriples(anyObject(), eq(PropertiesRdfContext.class)))
+                .thenReturn(getRdfStreamFromResource(auth, TTL));
 
         when(mockAclResource.getChildren()).thenReturn(Arrays.asList(mockAuthorizationResource1).iterator());
 
@@ -251,8 +251,8 @@ public class WebACRolesProviderTest {
 
         when(mockAuthorizationResource1.getTypes()).thenReturn(Arrays.asList(WEBAC_AUTHORIZATION));
         when(mockAuthorizationResource1.getPath()).thenReturn(auth);
-        when(mockAuthorizationResource1.getTriples(anyObject(),
-                    eq(PropertiesRdfContext.class))).thenReturn(getRdfStreamFromResource(auth, TTL));
+        when(mockAuthorizationResource1.getTriples(anyObject(), eq(PropertiesRdfContext.class)))
+                .thenReturn(getRdfStreamFromResource(auth, TTL));
 
         when(mockAclResource.getChildren()).thenReturn(Arrays.asList(mockAuthorizationResource1).iterator());
 
@@ -281,13 +281,13 @@ public class WebACRolesProviderTest {
 
         when(mockAuthorizationResource1.getTypes()).thenReturn(Arrays.asList(WEBAC_AUTHORIZATION));
         when(mockAuthorizationResource1.getPath()).thenReturn(auth1);
-        when(mockAuthorizationResource1.getTriples(anyObject(),
-                    eq(PropertiesRdfContext.class))).thenReturn(getRdfStreamFromResource(auth1, TTL));
+        when(mockAuthorizationResource1.getTriples(anyObject(), eq(PropertiesRdfContext.class)))
+                .thenReturn(getRdfStreamFromResource(auth1, TTL));
 
         when(mockAuthorizationResource2.getTypes()).thenReturn(Arrays.asList(WEBAC_AUTHORIZATION));
         when(mockAuthorizationResource2.getPath()).thenReturn(auth2);
-        when(mockAuthorizationResource2.getTriples(anyObject(),
-                    eq(PropertiesRdfContext.class))).thenReturn(getRdfStreamFromResource(auth2, TTL));
+        when(mockAuthorizationResource2.getTriples(anyObject(), eq(PropertiesRdfContext.class)))
+                .thenReturn(getRdfStreamFromResource(auth2, TTL));
 
         when(mockAclResource.getChildren()).thenReturn(
                 Arrays.asList(mockAuthorizationResource1, mockAuthorizationResource2).iterator());
@@ -316,13 +316,13 @@ public class WebACRolesProviderTest {
 
         when(mockAuthorizationResource1.getTypes()).thenReturn(Arrays.asList(WEBAC_AUTHORIZATION));
         when(mockAuthorizationResource1.getPath()).thenReturn(auth1);
-        when(mockAuthorizationResource1.getTriples(anyObject(),
-                    eq(PropertiesRdfContext.class))).thenReturn(getRdfStreamFromResource(auth1, TTL));
+        when(mockAuthorizationResource1.getTriples(anyObject(), eq(PropertiesRdfContext.class)))
+                .thenReturn(getRdfStreamFromResource(auth1, TTL));
 
         when(mockAuthorizationResource2.getTypes()).thenReturn(Arrays.asList(WEBAC_AUTHORIZATION));
         when(mockAuthorizationResource2.getPath()).thenReturn(auth2);
-        when(mockAuthorizationResource2.getTriples(anyObject(),
-                    eq(PropertiesRdfContext.class))).thenReturn(getRdfStreamFromResource(auth2, TTL));
+        when(mockAuthorizationResource2.getTriples(anyObject(), eq(PropertiesRdfContext.class)))
+                .thenReturn(getRdfStreamFromResource(auth2, TTL));
 
         when(mockAclResource.getChildren()).thenReturn(
                 Arrays.asList(mockAuthorizationResource1, mockAuthorizationResource2).iterator());
@@ -352,13 +352,13 @@ public class WebACRolesProviderTest {
 
         when(mockAuthorizationResource1.getTypes()).thenReturn(Arrays.asList(WEBAC_AUTHORIZATION));
         when(mockAuthorizationResource1.getPath()).thenReturn(auth1);
-        when(mockAuthorizationResource1.getTriples(anyObject(),
-                    eq(PropertiesRdfContext.class))).thenReturn(getRdfStreamFromResource(auth1, TTL));
+        when(mockAuthorizationResource1.getTriples(anyObject(), eq(PropertiesRdfContext.class)))
+                .thenReturn(getRdfStreamFromResource(auth1, TTL));
 
         when(mockAuthorizationResource2.getTypes()).thenReturn(Arrays.asList(WEBAC_AUTHORIZATION));
         when(mockAuthorizationResource2.getPath()).thenReturn(auth2);
-        when(mockAuthorizationResource2.getTriples(anyObject(),
-                    eq(PropertiesRdfContext.class))).thenReturn(getRdfStreamFromResource(auth2, TTL));
+        when(mockAuthorizationResource2.getTriples(anyObject(), eq(PropertiesRdfContext.class)))
+                .thenReturn(getRdfStreamFromResource(auth2, TTL));
 
         when(mockAclResource.getChildren()).thenReturn(
                 Arrays.asList(mockAuthorizationResource1, mockAuthorizationResource2).iterator());
@@ -391,13 +391,13 @@ public class WebACRolesProviderTest {
 
         when(mockAuthorizationResource1.getTypes()).thenReturn(Arrays.asList(WEBAC_AUTHORIZATION));
         when(mockAuthorizationResource1.getPath()).thenReturn(auth1);
-        when(mockAuthorizationResource1.getTriples(anyObject(),
-                    eq(PropertiesRdfContext.class))).thenReturn(getRdfStreamFromResource(auth1, TTL));
+        when(mockAuthorizationResource1.getTriples(anyObject(), eq(PropertiesRdfContext.class)))
+                .thenReturn(getRdfStreamFromResource(auth1, TTL));
 
         when(mockAuthorizationResource2.getTypes()).thenReturn(Arrays.asList(WEBAC_AUTHORIZATION));
         when(mockAuthorizationResource2.getPath()).thenReturn(auth2);
-        when(mockAuthorizationResource2.getTriples(anyObject(),
-                    eq(PropertiesRdfContext.class))).thenReturn(getRdfStreamFromResource(auth2, TTL));
+        when(mockAuthorizationResource2.getTriples(anyObject(), eq(PropertiesRdfContext.class)))
+                .thenReturn(getRdfStreamFromResource(auth2, TTL));
 
         when(mockAclResource.getChildren()).thenReturn(
                 Arrays.asList(mockAuthorizationResource1, mockAuthorizationResource2).iterator());
@@ -429,13 +429,13 @@ public class WebACRolesProviderTest {
 
         when(mockAuthorizationResource1.getTypes()).thenReturn(Arrays.asList(WEBAC_AUTHORIZATION));
         when(mockAuthorizationResource1.getPath()).thenReturn(auth1);
-        when(mockAuthorizationResource1.getTriples(anyObject(),
-                    eq(PropertiesRdfContext.class))).thenReturn(getRdfStreamFromResource(auth1, TTL));
+        when(mockAuthorizationResource1.getTriples(anyObject(), eq(PropertiesRdfContext.class)))
+                .thenReturn(getRdfStreamFromResource(auth1, TTL));
 
         when(mockAuthorizationResource2.getTypes()).thenReturn(Arrays.asList(WEBAC_AUTHORIZATION));
         when(mockAuthorizationResource2.getPath()).thenReturn(auth2);
-        when(mockAuthorizationResource2.getTriples(anyObject(),
-                    eq(PropertiesRdfContext.class))).thenReturn(getRdfStreamFromResource(auth2, TTL));
+        when(mockAuthorizationResource2.getTriples(anyObject(), eq(PropertiesRdfContext.class)))
+                .thenReturn(getRdfStreamFromResource(auth2, TTL));
 
         when(mockAclResource.getChildren()).thenReturn(
                 Arrays.asList(mockAuthorizationResource1, mockAuthorizationResource2).iterator());
@@ -474,13 +474,13 @@ public class WebACRolesProviderTest {
 
         when(mockAuthorizationResource1.getTypes()).thenReturn(Arrays.asList(WEBAC_AUTHORIZATION));
         when(mockAuthorizationResource1.getPath()).thenReturn(auth);
-        when(mockAuthorizationResource1.getTriples(anyObject(),
-                    eq(PropertiesRdfContext.class))).thenReturn(getRdfStreamFromResource(auth, TTL));
+        when(mockAuthorizationResource1.getTriples(anyObject(), eq(PropertiesRdfContext.class)))
+                .thenReturn(getRdfStreamFromResource(auth, TTL));
 
         when(mockAgentClassResource.getTypes()).thenReturn(Arrays.asList(FOAF_GROUP));
         when(mockAgentClassResource.getPath()).thenReturn(groupResource);
-        when(mockAgentClassResource.getTriples(anyObject(),
-                    eq(PropertiesRdfContext.class))).thenReturn(getRdfStreamFromResource(group, TTL));
+        when(mockAgentClassResource.getTriples(anyObject(), eq(PropertiesRdfContext.class)))
+                .thenReturn(getRdfStreamFromResource(group, TTL));
 
         when(mockAclResource.getChildren()).thenReturn(
                 Arrays.asList(mockAuthorizationResource1).iterator());
@@ -520,13 +520,13 @@ public class WebACRolesProviderTest {
 
         when(mockAuthorizationResource1.getTypes()).thenReturn(Arrays.asList(WEBAC_AUTHORIZATION));
         when(mockAuthorizationResource1.getPath()).thenReturn(auth);
-        when(mockAuthorizationResource1.getTriples(anyObject(),
-                    eq(PropertiesRdfContext.class))).thenReturn(getRdfStreamFromResource(auth, TTL));
+        when(mockAuthorizationResource1.getTriples(anyObject(), eq(PropertiesRdfContext.class)))
+                .thenReturn(getRdfStreamFromResource(auth, TTL));
 
         when(mockAgentClassResource.getTypes()).thenReturn(new ArrayList<>());
         when(mockAgentClassResource.getPath()).thenReturn(groupResource);
-        when(mockAgentClassResource.getTriples(anyObject(),
-                    eq(PropertiesRdfContext.class))).thenReturn(getRdfStreamFromResource(group, TTL));
+        when(mockAgentClassResource.getTriples(anyObject(), eq(PropertiesRdfContext.class)))
+                .thenReturn(getRdfStreamFromResource(group, TTL));
 
         when(mockAclResource.getChildren()).thenReturn(
                 Arrays.asList(mockAuthorizationResource1).iterator());

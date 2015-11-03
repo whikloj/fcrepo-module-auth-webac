@@ -20,8 +20,8 @@ import static com.hp.hpl.jena.rdf.model.ModelFactory.createDefaultModel;
 import static org.apache.commons.lang3.StringUtils.substringBeforeLast;
 import static org.apache.jena.riot.Lang.TTL;
 import static org.fcrepo.auth.webac.URIConstants.FOAF_AGENT_VALUE;
-import static org.fcrepo.auth.webac.URIConstants.FOAF_MEMBER_VALUE;
 import static org.fcrepo.auth.webac.URIConstants.FOAF_GROUP;
+import static org.fcrepo.auth.webac.URIConstants.FOAF_MEMBER_VALUE;
 import static org.fcrepo.auth.webac.URIConstants.WEBAC_ACCESS_CONTROL_VALUE;
 import static org.fcrepo.auth.webac.URIConstants.WEBAC_ACCESSTO_CLASS_VALUE;
 import static org.fcrepo.auth.webac.URIConstants.WEBAC_ACCESSTO_VALUE;
@@ -146,7 +146,7 @@ public class WebACRolesProvider implements AccessRolesProvider {
         final Optional<Pair<URI, FedoraResource>> effectiveAcl = getEffectiveAcl(
                 isNonRdfSourceDescription.test(resource.getNode()) ?
                     ((NonRdfSourceDescription)nodeConverter.convert(resource.getNode())).getDescribedResource() :
-                     resource);
+                    resource);
 
         // Construct a list of acceptable acl:accessTo values for the target resource.
         final List<String> resourcePaths = new ArrayList<>();
@@ -351,17 +351,17 @@ public class WebACRolesProvider implements AccessRolesProvider {
                 if (child.getTypes().contains(WEBAC_AUTHORIZATION)) {
                     final Map<String, List<String>> aclTriples = new HashMap<>();
                     child.getTriples(translator, PropertiesRdfContext.class)
-                         .filter(p -> isAclPredicate.test(model.asStatement(p).getPredicate()))
-                         .forEachRemaining(t -> {
+                        .filter(p -> isAclPredicate.test(model.asStatement(p).getPredicate()))
+                        .forEachRemaining(t -> {
                             aclTriples.putIfAbsent(t.getPredicate().getURI(), new ArrayList<>());
-                             if (t.getObject().isURI()) {
-                                 aclTriples.get(t.getPredicate().getURI()).add(
-                                     substringBeforeLast(t.getObject().getURI(), "/" + JCR_CONTENT));
-                             } else if (t.getObject().isLiteral()) {
+                            if (t.getObject().isURI()) {
+                                aclTriples.get(t.getPredicate().getURI()).add(
+                                    substringBeforeLast(t.getObject().getURI(), "/" + JCR_CONTENT));
+                            } else if (t.getObject().isLiteral()) {
                                 aclTriples.get(t.getPredicate().getURI()).add(
                                     t.getObject().getLiteralValue().toString());
-                             }
-                         });
+                            }
+                        });
                     // Create a WebACAuthorization object from the provided triples.
                     LOGGER.debug("Adding acl:Authorization from {}", child.getPath());
                     authorizations.add(createAuthorizationFromMap(aclTriples));

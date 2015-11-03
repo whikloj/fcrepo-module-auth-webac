@@ -34,6 +34,7 @@ import org.slf4j.Logger;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Multimap;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.Resource;
 
@@ -58,7 +59,7 @@ public class LinkHeaderProvider implements UriAwareHttpHeaderFactory {
     private NodeService nodeService;
 
     @Override
-    public ListMultimap<String, String> createHttpHeadersForResource(final UriInfo uriInfo,
+    public Multimap<String, String> createHttpHeadersForResource(final UriInfo uriInfo,
             final FedoraResource resource) {
 
         final Session internalSession = sessionFactory.getInternalSession();

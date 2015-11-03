@@ -21,8 +21,11 @@
     <property name="separator" value=","/>
   </bean>
 
+  <bean name="delegatedPrincipalProvider" class="org.fcrepo.auth.common.DelegateHeaderPrincipalProvider"/>
+
   <util:set id="principalProviderSet">
     <ref bean="headerProvider"/>
+    <ref bean="delegatedPrincipalProvider"/>
   </util:set>
 
   <bean name="authenticationProvider" class="org.fcrepo.auth.common.ServletContainerAuthenticationProvider">

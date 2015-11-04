@@ -22,7 +22,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 import javax.jcr.Session;
 import javax.ws.rs.core.UriInfo;
 
-import org.fcrepo.http.commons.api.UriAwareHttpHeaderFactory;
+import org.fcrepo.http.commons.api.UriAwareFactory;
 import org.fcrepo.http.commons.session.SessionFactory;
 import org.fcrepo.kernel.api.identifiers.IdentifierConverter;
 import org.fcrepo.kernel.api.models.FedoraResource;
@@ -33,7 +33,6 @@ import org.fcrepo.kernel.modeshape.rdf.impl.PropertiesRdfContext;
 import org.slf4j.Logger;
 
 import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.Resource;
@@ -48,34 +47,34 @@ import org.springframework.stereotype.Component;
  * @since 2015-10-30
  */
 @Component
-public class LinkHeaderProvider implements UriAwareHttpHeaderFactory {
+public class LinkHeaderProvider implements UriAwareFactory<Multimap<String, String>> {
 
     private static final Logger LOGGER = getLogger(LinkHeaderProvider.class);
 
     @Autowired
-    private SessionFactory sessionFactory;
-
-    @Autowired
     private NodeService nodeService;
 
+    @Autowired
+    private SessionFactory sessionFactory;
+
     @Override
-    public Multimap<String, String> createHttpHeadersForResource(final UriInfo uriInfo,
-            final FedoraResource resource) {
+    public Multimap<String, String> create(final FedoraResource resource, final UriInfo uriInfo,
+            final IdentifierConverter<Resource, FedoraResource> idTranslator) {
 
         final Session internalSession = sessionFactory.getInternalSession();
-        final IdentifierConverter<Resource, FedoraResource> translator =
+        final IdentifierConverter<Resource, FedoraResource> internalTranslator =
                 new DefaultIdentifierTranslator(internalSession);
         final Model model = createDefaultModel();
-        final ListMultimap<String, String> headers = ArrayListMultimap.create();
+        final Multimap<String, String> headers = ArrayListMultimap.create();
 
         LOGGER.debug("Adding WebAC Link Header for Resource: {}", resource);
 
-        nodeService.find(internalSession, resource.getPath()).getTriples(translator, PropertiesRdfContext.class)
+        nodeService.find(internalSession, resource.getPath()).getTriples(internalTranslator, PropertiesRdfContext.class)
         .filter(t -> model.asStatement(t).getPredicate().hasURI(WEBAC_ACCESS_CONTROL_VALUE))
         .filter(t -> t.getObject().isURI())
         .forEachRemaining(t -> {
             headers.put("Link", uriInfo.getBaseUriBuilder()
-                    .path(translator.convert(model.asStatement(t).getObject().asResource()).getPath()) +
+                            .path(internalTranslator.convert(model.asStatement(t).getObject().asResource()).getPath()) +
                     "; rel=\"acl\"");
         });
 

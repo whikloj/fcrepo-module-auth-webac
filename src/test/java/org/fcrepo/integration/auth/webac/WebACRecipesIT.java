@@ -16,26 +16,26 @@
 package org.fcrepo.integration.auth.webac;
 
 import static javax.ws.rs.core.Response.Status.CREATED;
-import static org.junit.Assert.assertEquals;
 import static org.fcrepo.auth.webac.URIConstants.WEBAC_ACCESS_CONTROL_VALUE;
 import static org.fcrepo.auth.webac.WebACRolesProvider.ROOT_AUTHORIZATION_PROPERTY;
 import static org.fcrepo.kernel.api.RdfLexicon.DC_NAMESPACE;
+import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 import java.io.InputStream;
-import org.fcrepo.integration.http.api.AbstractResourceIT;
 
 import org.apache.commons.codec.binary.Base64;
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPatch;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
-import org.apache.http.message.AbstractHttpMessage;
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpStatus;
 import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.entity.StringEntity;
+import org.apache.http.message.AbstractHttpMessage;
+import org.fcrepo.integration.http.api.AbstractResourceIT;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -494,4 +494,30 @@ public class WebACRecipesIT extends AbstractResourceIT {
         setAuth(requestGet2, "testuser");
         assertEquals("testuser can't read versioned object", HttpStatus.SC_OK, getStatus(requestGet2));
     }
+
+    @Test
+    public void testDelegatedUserAccess() throws IOException {
+        logger.debug("testing delegated authentication");
+        final String targetPath = "/rest/foo";
+        final String targetResource = ingestObj(targetPath);
+
+        final String acl = ingestAcl("fedoraAdmin", "/acls/11/acl.ttl", "/acls/11/authorization.ttl");
+        linkToAcl(targetResource, acl);
+
+        final HttpGet adminGet = getObjMethod(targetPath);
+        setAuth(adminGet, "fedoraAdmin");
+        assertEquals("admin can read object", HttpStatus.SC_OK, getStatus(adminGet));
+
+        final HttpGet adminDelegatedGet = getObjMethod(targetPath);
+        setAuth(adminDelegatedGet, "fedoraAdmin");
+        adminDelegatedGet.addHeader("On-Behalf-Of", "user1");
+        assertEquals("delegated user can read object", HttpStatus.SC_OK, getStatus(adminDelegatedGet));
+
+        final HttpGet adminUnauthorizedDelegatedGet = getObjMethod(targetPath);
+        setAuth(adminUnauthorizedDelegatedGet, "fedoraAdmin");
+        adminUnauthorizedDelegatedGet.addHeader("On-Behalf-Of", "fakeuser");
+        assertEquals("delegated fakeuser cannot read object", HttpStatus.SC_FORBIDDEN,
+                getStatus(adminUnauthorizedDelegatedGet));
+    }
+
 }

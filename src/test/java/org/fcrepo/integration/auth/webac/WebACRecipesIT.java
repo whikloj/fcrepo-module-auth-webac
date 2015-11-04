@@ -16,13 +16,16 @@
 package org.fcrepo.integration.auth.webac;
 
 import static javax.ws.rs.core.Response.Status.CREATED;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.fcrepo.auth.webac.URIConstants.WEBAC_ACCESS_CONTROL_VALUE;
 import static org.fcrepo.auth.webac.WebACRolesProvider.ROOT_AUTHORIZATION_PROPERTY;
 import static org.fcrepo.kernel.api.RdfLexicon.DC_NAMESPACE;
-import static org.junit.Assert.assertEquals;
-
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
+import java.util.Optional;
 
 import org.fcrepo.integration.http.api.AbstractResourceIT;
 
@@ -168,13 +171,10 @@ public class WebACRecipesIT extends AbstractResourceIT {
         setAuth(request, "smith123");
         try (final CloseableHttpResponse response = execute(request)) {
             assertEquals(HttpStatus.SC_OK, getStatus(response));
-            for (final Header header : response.getHeaders("Link")) {
-                logger.debug("Link header: {}", header.getValue());
-                if (header.getValue().equals(aclLink)) {
-                    return;
-                }
-            }
-            assertEquals("Missing Link Header " + aclLink.toString(), 1, 0);
+
+            final Optional<String> header = Arrays.asList(response.getHeaders("Link")).stream().map(Header::getValue)
+                    .filter(aclLink::equals).findFirst();
+            assertTrue("Missing Link header", header.isPresent());
         }
 
     }

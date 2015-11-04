@@ -166,8 +166,6 @@ public class WebACRecipesIT extends AbstractResourceIT {
 
         logger.debug("Can username 'smith123' read " + testObj);
         setAuth(request, "smith123");
-        // assertEquals(HttpStatus.SC_OK, getStatus(request));
-
         try (final CloseableHttpResponse response = execute(request)) {
             assertEquals(HttpStatus.SC_OK, getStatus(response));
             for (final Header header : response.getHeaders("Link")) {

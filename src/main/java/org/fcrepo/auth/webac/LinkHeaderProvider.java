@@ -20,6 +20,7 @@ import static org.fcrepo.auth.webac.URIConstants.WEBAC_ACCESS_CONTROL_VALUE;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import javax.jcr.Session;
+import javax.ws.rs.core.Link;
 import javax.ws.rs.core.UriInfo;
 
 import org.fcrepo.http.commons.api.UriAwareHttpHeaderFactory;
@@ -74,9 +75,9 @@ public class LinkHeaderProvider implements UriAwareHttpHeaderFactory {
         .filter(t -> model.asStatement(t).getPredicate().hasURI(WEBAC_ACCESS_CONTROL_VALUE))
         .filter(t -> t.getObject().isURI())
         .forEachRemaining(t -> {
-            headers.put("Link", uriInfo.getBaseUriBuilder()
-                    .path(translator.convert(model.asStatement(t).getObject().asResource()).getPath()) +
-                    "; rel=\"acl\"");
+                    headers.put("Link", Link.fromUri(uriInfo.getBaseUriBuilder()
+                            .path(translator.convert(model.asStatement(t).getObject().asResource()).getPath())
+                            .toString()).rel("acl").build().toString());
         });
 
         return headers;

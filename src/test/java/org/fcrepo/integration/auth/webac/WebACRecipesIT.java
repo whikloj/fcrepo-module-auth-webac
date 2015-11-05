@@ -27,6 +27,8 @@ import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Optional;
 
+import javax.ws.rs.core.Link;
+
 import org.fcrepo.integration.http.api.AbstractResourceIT;
 
 import org.apache.commons.codec.binary.Base64;
@@ -161,7 +163,7 @@ public class WebACRecipesIT extends AbstractResourceIT {
         final String testObj = ingestObj("/rest/webacl_box1");
         final String acl1 = ingestAcl("fedoraAdmin", "/acls/01/acl.ttl", "/acls/01/authorization.ttl");
         linkToAcl(testObj, acl1);
-        final String aclLink = acl1 + "; rel=\"acl\"";
+        final String aclLink = Link.fromUri(acl1).rel("acl").build().toString();
 
         logger.debug("Anonymous can't read");
         final HttpGet request = getObjMethod(testObj.replace(serverAddress, ""));

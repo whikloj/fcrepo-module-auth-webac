@@ -16,6 +16,7 @@
 package org.fcrepo.integration.auth.webac;
 
 import static javax.ws.rs.core.Response.Status.CREATED;
+import static java.util.Arrays.stream;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -24,13 +25,11 @@ import static org.fcrepo.auth.webac.WebACRolesProvider.ROOT_AUTHORIZATION_PROPER
 import static org.fcrepo.kernel.api.RdfLexicon.DC_NAMESPACE;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Arrays;
 import java.util.Optional;
 
 import javax.ws.rs.core.Link;
 
 import org.fcrepo.integration.http.api.AbstractResourceIT;
-
 import org.apache.commons.codec.binary.Base64;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -165,20 +164,30 @@ public class WebACRecipesIT extends AbstractResourceIT {
         linkToAcl(testObj, acl1);
         final String aclLink = Link.fromUri(acl1).rel("acl").build().toString();
 
-        logger.debug("Anonymous can't read");
         final HttpGet request = getObjMethod(testObj.replace(serverAddress, ""));
-        assertEquals(HttpStatus.SC_FORBIDDEN, getStatus(request));
+        assertEquals("Anonymous can read " + testObj, HttpStatus.SC_FORBIDDEN, getStatus(request));
 
-        logger.debug("Can username 'smith123' read " + testObj);
         setAuth(request, "smith123");
         try (final CloseableHttpResponse response = execute(request)) {
-            assertEquals(HttpStatus.SC_OK, getStatus(response));
-
-            final Optional<String> header = Arrays.asList(response.getHeaders("Link")).stream().map(Header::getValue)
+            assertEquals("User 'smith123' can't read" + testObj, HttpStatus.SC_OK, getStatus(response));
+            // This gets the Link headers and filters for the correct one (aclLink::equals) defined above.
+            final Optional<String> header = stream(response.getHeaders("Link")).map(Header::getValue)
                     .filter(aclLink::equals).findFirst();
+            // So you either have the correct Link header or you get nothing.
             assertTrue("Missing Link header", header.isPresent());
         }
 
+        final String childObj = ingestObj("/rest/webacl_box1/child");
+        final HttpGet getReq = getObjMethod(childObj.replace(serverAddress, ""));
+        setAuth(getReq, "smith123");
+        try (final CloseableHttpResponse response = execute(getReq)) {
+            assertEquals("User 'smith123' can't read child of " + testObj, HttpStatus.SC_OK, getStatus(response));
+            // This gets the Link headers and filters for the correct one (aclLink::equals) defined above.
+            final Optional<String> header = stream(response.getHeaders("Link")).map(Header::getValue)
+                    .filter(aclLink::equals).findFirst();
+            // So you either have the correct Link header or you get nothing.
+            assertTrue("Missing Link header to ACL on parent", header.isPresent());
+        }
     }
 
     @Test
@@ -535,4 +544,21 @@ public class WebACRecipesIT extends AbstractResourceIT {
                 getStatus(adminUnauthorizedDelegatedGet));
     }
 
+    @Test
+    public void testInvalidAccessControlLink() throws IOException {
+        final String id = "/rest/" + getRandomUniqueId();
+        ingestObj(id);
+
+        final HttpPatch patchReq = patchObjMethod(id);
+        setAuth(patchReq, "fedoraAdmin");
+        patchReq.addHeader("Content-type", "application/sparql-update");
+        patchReq.setEntity(new StringEntity(
+                "INSERT { <> <" + WEBAC_ACCESS_CONTROL_VALUE + "> \"/rest/acl/badAclLink\" . } WHERE {}"));
+        assertEquals(HttpStatus.SC_NO_CONTENT, getStatus(patchReq));
+
+        final HttpGet getReq = getObjMethod(id);
+        setAuth(getReq, "fedoraAdmin");
+        assertEquals("Non-URI accessControl property did not throw Exception", HttpStatus.SC_BAD_REQUEST,
+                getStatus(getReq));
+    }
 }

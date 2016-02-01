@@ -62,6 +62,7 @@ import javax.jcr.Session;
 
 import org.fcrepo.auth.roles.common.AccessRolesProvider;
 import org.fcrepo.http.commons.session.SessionFactory;
+import org.fcrepo.kernel.api.exception.MalformedRdfException;
 import org.fcrepo.kernel.api.identifiers.IdentifierConverter;
 import org.fcrepo.kernel.api.models.FedoraResource;
 import org.fcrepo.kernel.api.models.NonRdfSourceDescription;
@@ -386,7 +387,7 @@ public class WebACRolesProvider implements AccessRolesProvider {
      * any permissions that correspond to access to that parent. This ACL resource may or may not exist,
      * and it may be external to the fedora repository.
      */
-    private static Optional<ACLHandle> getEffectiveAcl(final FedoraResource resource) {
+    static Optional<ACLHandle> getEffectiveAcl(final FedoraResource resource) {
         try {
             final IdentifierConverter<Resource, FedoraResource> translator =
                 new DefaultIdentifierTranslator(resource.getNode().getSession());
@@ -395,8 +396,13 @@ public class WebACRolesProvider implements AccessRolesProvider {
 
             resource.getTriples(translator, PropertiesRdfContext.class)
                 .filter(t -> model.asStatement(t).getPredicate().hasURI(WEBAC_ACCESS_CONTROL_VALUE))
-                .filter(t -> t.getObject().isURI())
                 .forEachRemaining(t -> {
+                    if (!t.getObject().isURI()) {
+                        final String error = String.format("The value %s of the %s on this resource must be a URI",
+                                t.getObject(), WEBAC_ACCESS_CONTROL_VALUE);
+                        LOGGER.error(error);
+                        throw new MalformedRdfException(error);
+                    }
                     acls.add(t.getObject().getURI());
                 });
 

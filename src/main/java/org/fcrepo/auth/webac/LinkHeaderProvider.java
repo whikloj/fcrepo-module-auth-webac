@@ -15,10 +15,11 @@
  */
 package org.fcrepo.auth.webac;
 
-import static com.hp.hpl.jena.rdf.model.ModelFactory.createDefaultModel;
 import static org.fcrepo.auth.webac.URIConstants.WEBAC_ACCESS_CONTROL_VALUE;
 import static org.slf4j.LoggerFactory.getLogger;
+import static com.hp.hpl.jena.rdf.model.ResourceFactory.createProperty;
 
+import java.net.URI;
 import javax.jcr.Session;
 import javax.ws.rs.core.Link;
 import javax.ws.rs.core.UriInfo;
@@ -36,7 +37,6 @@ import org.slf4j.Logger;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
-import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.Resource;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -65,18 +65,23 @@ public class LinkHeaderProvider implements UriAwareHttpHeaderFactory {
         final Session internalSession = sessionFactory.getInternalSession();
         final IdentifierConverter<Resource, FedoraResource> translator =
                 new DefaultIdentifierTranslator(internalSession);
-        final Model model = createDefaultModel();
         final ListMultimap<String, String> headers = ArrayListMultimap.create();
 
         LOGGER.debug("Adding WebAC Link Header for Resource: {}", resource);
-
-        nodeService.find(internalSession, resource.getPath()).getTriples(translator, PropertiesRdfContext.class)
-        .filter(t -> model.asStatement(t).getPredicate().hasURI(WEBAC_ACCESS_CONTROL_VALUE))
-        .filter(t -> t.getObject().isURI())
-        .forEachRemaining(t -> {
-                    headers.put("Link", Link.fromUri(uriInfo.getBaseUriBuilder()
-                            .path(translator.convert(model.asStatement(t).getObject().asResource()).getPath())
-                            .toString()).rel("acl").build().toString());
+        // Get the correct Acl for this resource
+        WebACRolesProvider.getEffectiveAcl(resource).ifPresent(acls -> {
+            // If the Acl is present we need to use the internal session to get its URI
+            nodeService.find(internalSession, acls.resource.getPath())
+            .getTriples(translator, PropertiesRdfContext.class)
+            .asModel().listObjectsOfProperty(createProperty(WEBAC_ACCESS_CONTROL_VALUE))
+            .forEachRemaining(linkObj -> {
+                if (linkObj.isURIResource()) {
+                    final Resource acl = linkObj.asResource();
+                    final String aclPath = translator.convert(acl).getPath();
+                    final URI aclUri = uriInfo.getBaseUriBuilder().path(aclPath).build();
+                    headers.put("Link", Link.fromUri(aclUri).rel("acl").build().toString());
+                }
+            });
         });
 
         return headers;

@@ -19,6 +19,9 @@ import static com.hp.hpl.jena.rdf.model.ModelFactory.createDefaultModel;
 import static org.fcrepo.auth.webac.URIConstants.WEBAC_ACCESS_CONTROL_VALUE;
 import static org.slf4j.LoggerFactory.getLogger;
 
+import java.net.URI;
+import java.util.Optional;
+
 import javax.jcr.Session;
 import javax.ws.rs.core.Link;
 import javax.ws.rs.core.UriInfo;
@@ -31,6 +34,7 @@ import org.fcrepo.kernel.api.services.NodeService;
 import org.fcrepo.kernel.modeshape.rdf.impl.DefaultIdentifierTranslator;
 import org.fcrepo.kernel.modeshape.rdf.impl.PropertiesRdfContext;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 
 import com.google.common.collect.ArrayListMultimap;
@@ -69,15 +73,20 @@ public class LinkHeaderProvider implements UriAwareHttpHeaderFactory {
         final ListMultimap<String, String> headers = ArrayListMultimap.create();
 
         LOGGER.debug("Adding WebAC Link Header for Resource: {}", resource);
-
-        nodeService.find(internalSession, resource.getPath()).getTriples(translator, PropertiesRdfContext.class)
-        .filter(t -> model.asStatement(t).getPredicate().hasURI(WEBAC_ACCESS_CONTROL_VALUE))
-        .filter(t -> t.getObject().isURI())
-        .forEachRemaining(t -> {
-                    headers.put("Link", Link.fromUri(uriInfo.getBaseUriBuilder()
-                            .path(translator.convert(model.asStatement(t).getObject().asResource()).getPath())
-                            .toString()).rel("acl").build().toString());
-        });
+        // Get the correct Acl for this resource
+        final Optional<Pair<URI, FedoraResource>> acls = WebACRolesProvider.getEffectiveAcl(resource);
+        if (acls.isPresent()) {
+            // If the Acl is present we probably need to use the internal session to get it's URI
+            nodeService.find(internalSession, acls.get().getRight().getPath())
+                    .getTriples(translator, PropertiesRdfContext.class)
+                    .filter(t -> model.asStatement(t).getPredicate().hasURI(WEBAC_ACCESS_CONTROL_VALUE))
+                    .filter(t -> t.getObject().isURI())
+                    .forEachRemaining(t -> {
+                headers.put("Link", Link.fromUri(uriInfo.getBaseUriBuilder()
+                        .path(translator.convert(model.asStatement(t).getObject().asResource()).getPath())
+                        .toString()).rel("acl").build().toString());
+                    });
+        }
 
         return headers;
     }

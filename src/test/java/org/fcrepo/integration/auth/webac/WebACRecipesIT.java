@@ -179,6 +179,17 @@ public class WebACRecipesIT extends AbstractResourceIT {
             assertTrue("Missing Link header", header.isPresent());
         }
 
+        logger.debug("Can username 'smith123' read a child of {}", testObj);
+        final String childObj = ingestObj("/rest/webacl_box1/child");
+        final HttpGet getReq = getObjMethod(childObj.replace(serverAddress, ""));
+        setAuth(getReq, "smith123");
+        try (final CloseableHttpResponse response = execute(getReq)) {
+            assertEquals(HttpStatus.SC_OK, getStatus(response));
+            final Optional<String> header = Arrays.asList(response.getHeaders("Link")).stream().map(Header::getValue)
+                    .filter(aclLink::equals).findFirst();
+            assertTrue("Missing Link header to ACL on parent", header.isPresent());
+
+        }
     }
 
     @Test

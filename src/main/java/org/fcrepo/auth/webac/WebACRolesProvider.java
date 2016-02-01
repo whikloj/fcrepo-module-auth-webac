@@ -386,7 +386,7 @@ public class WebACRolesProvider implements AccessRolesProvider {
      * any permissions that correspond to access to that parent. This ACL resource may or may not exist,
      * and it may be external to the fedora repository.
      */
-    private static Optional<ACLHandle> getEffectiveAcl(final FedoraResource resource) {
+    static Optional<ACLHandle> getEffectiveAcl(final FedoraResource resource) {
         try {
             final IdentifierConverter<Resource, FedoraResource> translator =
                 new DefaultIdentifierTranslator(resource.getNode().getSession());

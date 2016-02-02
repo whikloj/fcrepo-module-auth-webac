@@ -70,7 +70,6 @@ import org.fcrepo.kernel.modeshape.rdf.impl.DefaultIdentifierTranslator;
 import org.fcrepo.kernel.modeshape.rdf.impl.PropertiesRdfContext;
 import org.fcrepo.kernel.modeshape.utils.UncheckedPredicate;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.modeshape.jcr.value.Path;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -143,7 +142,7 @@ public class WebACRolesProvider implements AccessRolesProvider {
         LOGGER.debug("Getting agent roles for: {}", resource.getPath());
 
         // Get the effective ACL by searching the target node and any ancestors.
-        final Optional<Pair<URI, FedoraResource>> effectiveAcl = getEffectiveAcl(
+        final Optional<ACLHandle> effectiveAcl = getEffectiveAcl(
                 isNonRdfSourceDescription.test(resource.getNode()) ?
                     ((NonRdfSourceDescription)nodeConverter.convert(resource.getNode())).getDescribedResource() :
                     resource);
@@ -158,7 +157,7 @@ public class WebACRolesProvider implements AccessRolesProvider {
         // Add the resource location and types of the ACL-bearing parent,
         // if present and if different than the target resource.
         effectiveAcl
-            .map(x -> x.getRight())
+            .map(x -> x.resource)
             .filter(x -> !x.getPath().equals(resource.getPath()))
             .ifPresent(x -> {
                 resourcePaths.add(FEDORA_INTERNAL_PREFIX + x.getPath());
@@ -185,7 +184,7 @@ public class WebACRolesProvider implements AccessRolesProvider {
 
         // Read the effective Acl and return a list of acl:Authorization statements
         final List<WebACAuthorization> authorizations = effectiveAcl
-                .map(uncheck(x -> getAuthorizations(x.getLeft().toString())))
+                .map(uncheck(x -> getAuthorizations(x.uri.toString())))
                 .orElseGet(() -> getDefaultAuthorizations());
 
         // Filter the acl:Authorization statements so that they correspond only to statements that apply to
@@ -231,7 +230,7 @@ public class WebACRolesProvider implements AccessRolesProvider {
      *  to whether the given acl:accessToClass values contain any of the rdf:type values provided
      *  when creating the predicate.
      */
-    private Function<List<String>, Predicate<WebACAuthorization>> accessToClass = uris -> x -> {
+    private final Function<List<String>, Predicate<WebACAuthorization>> accessToClass = uris -> x -> {
         return uris.stream()
                    .distinct()
                    .filter(y -> x.getAccessToClassURIs().contains(y))
@@ -244,7 +243,7 @@ public class WebACRolesProvider implements AccessRolesProvider {
      *  to whether the given acl:accessTo values contain any of the target resource values provided
      *  when creating the predicate.
      */
-    private Function<List<String>, Predicate<WebACAuthorization>> accessTo = uris -> x -> {
+    private final Function<List<String>, Predicate<WebACAuthorization>> accessTo = uris -> x -> {
         return uris.stream()
                    .distinct()
                    .filter(y -> x.getAccessToURIs().contains(y))
@@ -387,7 +386,7 @@ public class WebACRolesProvider implements AccessRolesProvider {
      * any permissions that correspond to access to that parent. This ACL resource may or may not exist,
      * and it may be external to the fedora repository.
      */
-    private static Optional<Pair<URI, FedoraResource>> getEffectiveAcl(final FedoraResource resource) {
+    private static Optional<ACLHandle> getEffectiveAcl(final FedoraResource resource) {
         try {
             final IdentifierConverter<Resource, FedoraResource> translator =
                 new DefaultIdentifierTranslator(resource.getNode().getSession());
@@ -405,7 +404,7 @@ public class WebACRolesProvider implements AccessRolesProvider {
                 if (acls.size() > 1) {
                     LOGGER.warn("Found multiple ACLs defined for this node. Using: {}", acls.get(0));
                 }
-                return Optional.of(Pair.of(URI.create(acls.get(0)), resource));
+                return Optional.of(new ACLHandle(URI.create(acls.get(0)), resource));
             } else if (resource.getNode().getDepth() == 0) {
                 LOGGER.debug("No ACLs defined on this node or in parent hierarchy");
                 return Optional.empty();

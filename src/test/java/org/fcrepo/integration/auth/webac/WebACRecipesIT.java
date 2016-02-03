@@ -30,7 +30,6 @@ import java.util.Optional;
 import javax.ws.rs.core.Link;
 
 import org.fcrepo.integration.http.api.AbstractResourceIT;
-
 import org.apache.commons.codec.binary.Base64;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -545,4 +544,21 @@ public class WebACRecipesIT extends AbstractResourceIT {
                 getStatus(adminUnauthorizedDelegatedGet));
     }
 
+    @Test
+    public void testInvalidAccessControlLink() throws IOException {
+        final String id = "/rest/" + getRandomUniqueId();
+        ingestObj(id);
+
+        final HttpPatch patchReq = patchObjMethod(id);
+        setAuth(patchReq, "fedoraAdmin");
+        patchReq.addHeader("Content-type", "application/sparql-update");
+        patchReq.setEntity(new StringEntity(
+                "INSERT { <> <" + WEBAC_ACCESS_CONTROL_VALUE + "> \"/rest/acl/badAclLink\" . } WHERE {}"));
+        assertEquals(HttpStatus.SC_NO_CONTENT, getStatus(patchReq));
+
+        final HttpGet getReq = getObjMethod(id);
+        setAuth(getReq, "fedoraAdmin");
+        assertEquals("Non-URI accessControl property did not throw Exception", HttpStatus.SC_BAD_REQUEST,
+                getStatus(getReq));
+    }
 }

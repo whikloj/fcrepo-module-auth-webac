@@ -56,13 +56,17 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.version.Version;
+import javax.jcr.version.VersionHistory;
 
 import org.fcrepo.auth.roles.common.AccessRolesProvider;
 import org.fcrepo.http.commons.session.SessionFactory;
 import org.fcrepo.kernel.api.exception.MalformedRdfException;
+import org.fcrepo.kernel.api.exception.RepositoryRuntimeException;
 import org.fcrepo.kernel.api.identifiers.IdentifierConverter;
 import org.fcrepo.kernel.api.models.FedoraResource;
 import org.fcrepo.kernel.api.models.NonRdfSourceDescription;
@@ -97,6 +101,8 @@ public class WebACRolesProvider implements AccessRolesProvider {
 
     private static final String ROOT_AUTHORIZATION_LOCATION = "/root-authorization.ttl";
 
+    private static final String JCR_VERSIONABLE_UUID_PROPERTY = "jcr:versionableUuid";
+
     @Autowired
     private NodeService nodeService;
 
@@ -125,10 +131,41 @@ public class WebACRolesProvider implements AccessRolesProvider {
 
         if (exists.test(path) || path.isRoot()) {
             LOGGER.debug("findRolesForPath: {}", path.getString());
-            return nodeService.find(session, path.toString());
+            final FedoraResource resource = nodeService.find(session, path.toString());
+
+            if (resource.hasType("nt:version")) {
+                LOGGER.debug("{} is a version, getting the baseVersion", resource);
+                return getBaseVersion(resource);
+            }
+            return resource;
         }
         LOGGER.trace("Path: {} does not exist, checking parent", path.getString());
         return locateResource(path.getParent(), session);
+    }
+
+    /**
+     * Get the versionable FedoraResource for this version resource
+     *
+     * @param resource the Version resource
+     * @return the base versionable resource or the version if not found.
+     */
+    private FedoraResource getBaseVersion(final FedoraResource resource) {
+        final Session internalSession = sessionFactory.getInternalSession();
+
+        try {
+            final VersionHistory base = ((Version) resource.getNode()).getContainingHistory();
+            if (base.hasProperty(JCR_VERSIONABLE_UUID_PROPERTY)) {
+                final String versionUuid = base.getProperty(JCR_VERSIONABLE_UUID_PROPERTY).getValue().getString();
+                LOGGER.debug("versionableUuid : {}", versionUuid);
+                final Node baseNode = internalSession.getNodeByIdentifier(versionUuid);
+                return nodeService.cast(baseNode);
+            }
+        } catch (final ItemNotFoundException e) {
+            LOGGER.error("Node with jcr:versionableUuid not found : {}", e.getMessage());
+        } catch (final RepositoryException e) {
+            throw new RepositoryRuntimeException(e);
+        }
+        return resource;
     }
 
     @Override

@@ -545,6 +545,31 @@ public class WebACRecipesIT extends AbstractResourceIT {
     }
 
     @Test
+    public void testAccessByUriToVersionedResources() throws IOException {
+        final String idVersion = "/rest/versionResourceUri";
+        ingestObj(idVersion);
+
+        final String acl = ingestAcl("fedoraAdmin",
+                "/acls/12/acl.ttl",
+                "/acls/12/authorization.ttl");
+
+        linkToAcl(idVersion, acl);
+
+        final HttpGet requestGet1 = getObjMethod(idVersion);
+        setAuth(requestGet1, "testuser");
+        assertEquals("testuser can't read object", HttpStatus.SC_OK, getStatus(requestGet1));
+
+        final HttpPost requestPost1 = postObjMethod(idVersion + "/fcr:versions");
+        requestPost1.addHeader("Slug", "v0");
+        setAuth(requestPost1, "testuser");
+        assertEquals("Unable to create a new version", HttpStatus.SC_CREATED, getStatus(requestPost1));
+
+        final HttpGet requestGet2 = getObjMethod(idVersion);
+        setAuth(requestGet2, "testuser");
+        assertEquals("testuser can't read versioned object", HttpStatus.SC_OK, getStatus(requestGet2));
+    }
+
+    @Test
     public void testInvalidAccessControlLink() throws IOException {
         final String id = "/rest/" + getRandomUniqueId();
         ingestObj(id);
@@ -561,4 +586,5 @@ public class WebACRecipesIT extends AbstractResourceIT {
         assertEquals("Non-URI accessControl property did not throw Exception", HttpStatus.SC_BAD_REQUEST,
                 getStatus(getReq));
     }
+
 }

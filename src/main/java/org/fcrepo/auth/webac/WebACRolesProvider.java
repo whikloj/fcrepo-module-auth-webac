@@ -56,9 +56,15 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
+import javax.jcr.PropertyIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.Value;
+import javax.jcr.ValueFormatException;
+import javax.jcr.version.Version;
+import javax.jcr.version.VersionHistory;
 
 import org.fcrepo.auth.roles.common.AccessRolesProvider;
 import org.fcrepo.http.commons.session.SessionFactory;
@@ -67,8 +73,10 @@ import org.fcrepo.kernel.api.identifiers.IdentifierConverter;
 import org.fcrepo.kernel.api.models.FedoraResource;
 import org.fcrepo.kernel.api.models.NonRdfSourceDescription;
 import org.fcrepo.kernel.api.services.NodeService;
+import org.fcrepo.kernel.api.utils.iterators.RdfStream;
 import org.fcrepo.kernel.modeshape.rdf.impl.DefaultIdentifierTranslator;
 import org.fcrepo.kernel.modeshape.rdf.impl.PropertiesRdfContext;
+import org.fcrepo.kernel.modeshape.rdf.impl.ReferencesRdfContext;
 import org.fcrepo.kernel.modeshape.utils.UncheckedPredicate;
 
 import org.modeshape.jcr.value.Path;
@@ -125,10 +133,71 @@ public class WebACRolesProvider implements AccessRolesProvider {
 
         if (exists.test(path) || path.isRoot()) {
             LOGGER.debug("findRolesForPath: {}", path.getString());
-            return nodeService.find(session, path.toString());
+            final FedoraResource resource = nodeService.find(session, path.toString());
+
+            if (resource.hasType("nt:version")) {
+
+                LOGGER.debug("{} is a version, getting the baseVersion", resource);
+                return getBaseVersion(resource, session);
+            }
+            return resource;
         }
         LOGGER.trace("Path: {} does not exist, checking parent", path.getString());
         return locateResource(path.getParent(), session);
+    }
+
+    /**
+     * @param resource
+     * @return
+     */
+    private FedoraResource getBaseVersion(final FedoraResource resource, final Session session) {
+        final Session internalSession = sessionFactory.getInternalSession();
+        try {
+            final VersionHistory base = ((Version) resource.getNode()).getContainingHistory();
+            final PropertyIterator iter = base.getProperties();
+            while (iter.hasNext()) {
+                LOGGER.debug("history property is {}", iter.next());
+            }
+            final Value[] predecessors = resource.getProperty("jcr:predecessors").getValues();
+            for (final Value first : predecessors) {
+
+                final Node baseVersion = internalSession.getNodeByIdentifier(first.getString());
+                return nodeService.cast(baseVersion);
+            }
+        } catch (final ItemNotFoundException e) {
+            LOGGER.debug("No item found with identifier");
+            e.printStackTrace();
+        } catch (final ValueFormatException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (final RepositoryException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+
+        final IdentifierConverter<Resource, FedoraResource> translator =
+                new DefaultIdentifierTranslator(session);
+        LOGGER.debug("This is a version so we test against the baseVersion.");
+
+        final List<Triple> bases = new ArrayList<>();
+        final RdfStream stream = resource.getTriples(translator, ReferencesRdfContext.class);
+        stream
+        // .filter(t -> t.getPredicate().getURI().equals(REPOSITORY_NAMESPACE + "baseVersion"))
+        .forEachRemaining(t -> {
+            LOGGER.debug("baseVersion {}", t);
+            // bases.add(t);
+        });
+
+        if (!bases.isEmpty() &&
+                bases.get(bases.size() - 1).getSubject().toString().startsWith(FEDORA_INTERNAL_PREFIX)) {
+            LOGGER.debug("predecessor has {} prefix", FEDORA_INTERNAL_PREFIX);
+            return nodeService.find(session,
+                    bases.get(bases.size() - 1).getSubject().toString().substring(FEDORA_INTERNAL_PREFIX.length()));
+        } else {
+            LOGGER.debug("no predecessors found");
+            return resource;
+        }
     }
 
     @Override

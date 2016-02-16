@@ -61,7 +61,6 @@ import javax.jcr.Node;
 import javax.jcr.PropertyIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionHistory;
@@ -156,14 +155,17 @@ public class WebACRolesProvider implements AccessRolesProvider {
             final VersionHistory base = ((Version) resource.getNode()).getContainingHistory();
             final PropertyIterator iter = base.getProperties();
             while (iter.hasNext()) {
-                LOGGER.debug("history property is {}", iter.next());
+                final javax.jcr.Property prop = (javax.jcr.Property)iter.next();
+                LOGGER.info("history property is {}", prop);
+                if ("jcr:versionableUuid".equals(prop.getName())) {
+                    final Node baseNode = internalSession.getNodeByIdentifier(prop.getValue().getString());
+                    final PropertyIterator baseNodeProps = baseNode.getProperties();
+                    while (baseNodeProps.hasNext()) {
+                        LOGGER.warn("base-resource prop: {}", baseNodeProps.nextProperty());
+                    }
+                }
             }
-            final Value[] predecessors = resource.getProperty("jcr:predecessors").getValues();
-            for (final Value first : predecessors) {
 
-                final Node baseVersion = internalSession.getNodeByIdentifier(first.getString());
-                return nodeService.cast(baseVersion);
-            }
         } catch (final ItemNotFoundException e) {
             LOGGER.debug("No item found with identifier");
             e.printStackTrace();

@@ -101,6 +101,8 @@ public class WebACRolesProvider implements AccessRolesProvider {
 
     private static final String ROOT_AUTHORIZATION_LOCATION = "/root-authorization.ttl";
 
+    private static final String JCR_VERSIONABLE_UUID_PROPERTY = "jcr:versionableUuid";
+
     @Autowired
     private NodeService nodeService;
 
@@ -149,12 +151,13 @@ public class WebACRolesProvider implements AccessRolesProvider {
      */
     private FedoraResource getBaseVersion(final FedoraResource resource) {
         final Session internalSession = sessionFactory.getInternalSession();
+
         try {
             final VersionHistory base = ((Version) resource.getNode()).getContainingHistory();
-            if (base.hasProperty("jcr:versionableUuid")) {
-                LOGGER.debug("versionableUuid : {}", base.getProperty("jcr:versionableUuid").getValue().getString());
-                final Node baseNode = internalSession
-                        .getNodeByIdentifier(base.getProperty("jcr:versionableUuid").getValue().getString());
+            if (base.hasProperty(JCR_VERSIONABLE_UUID_PROPERTY)) {
+                final String versionUuid = base.getProperty(JCR_VERSIONABLE_UUID_PROPERTY).getValue().getString();
+                LOGGER.debug("versionableUuid : {}", versionUuid);
+                final Node baseNode = internalSession.getNodeByIdentifier(versionUuid);
                 return nodeService.cast(baseNode);
             }
         } catch (final ItemNotFoundException e) {

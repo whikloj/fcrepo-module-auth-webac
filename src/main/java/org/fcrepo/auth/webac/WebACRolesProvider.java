@@ -58,24 +58,21 @@ import java.util.stream.Stream;
 
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
-import javax.jcr.PropertyIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.ValueFormatException;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionHistory;
 
 import org.fcrepo.auth.roles.common.AccessRolesProvider;
 import org.fcrepo.http.commons.session.SessionFactory;
 import org.fcrepo.kernel.api.exception.MalformedRdfException;
+import org.fcrepo.kernel.api.exception.RepositoryRuntimeException;
 import org.fcrepo.kernel.api.identifiers.IdentifierConverter;
 import org.fcrepo.kernel.api.models.FedoraResource;
 import org.fcrepo.kernel.api.models.NonRdfSourceDescription;
 import org.fcrepo.kernel.api.services.NodeService;
-import org.fcrepo.kernel.api.utils.iterators.RdfStream;
 import org.fcrepo.kernel.modeshape.rdf.impl.DefaultIdentifierTranslator;
 import org.fcrepo.kernel.modeshape.rdf.impl.PropertiesRdfContext;
-import org.fcrepo.kernel.modeshape.rdf.impl.ReferencesRdfContext;
 import org.fcrepo.kernel.modeshape.utils.UncheckedPredicate;
 
 import org.modeshape.jcr.value.Path;
@@ -135,9 +132,8 @@ public class WebACRolesProvider implements AccessRolesProvider {
             final FedoraResource resource = nodeService.find(session, path.toString());
 
             if (resource.hasType("nt:version")) {
-
                 LOGGER.debug("{} is a version, getting the baseVersion", resource);
-                return getBaseVersion(resource, session);
+                return getBaseVersion(resource);
             }
             return resource;
         }
@@ -146,60 +142,27 @@ public class WebACRolesProvider implements AccessRolesProvider {
     }
 
     /**
-     * @param resource
-     * @return
+     * Get the versionable FedoraResource for this version resource
+     *
+     * @param resource the Version resource
+     * @return the base versionable resource or the version if not found.
      */
-    private FedoraResource getBaseVersion(final FedoraResource resource, final Session session) {
+    private FedoraResource getBaseVersion(final FedoraResource resource) {
         final Session internalSession = sessionFactory.getInternalSession();
         try {
             final VersionHistory base = ((Version) resource.getNode()).getContainingHistory();
-            final PropertyIterator iter = base.getProperties();
-            while (iter.hasNext()) {
-                final javax.jcr.Property prop = (javax.jcr.Property)iter.next();
-                LOGGER.info("history property is {}", prop);
-                if ("jcr:versionableUuid".equals(prop.getName())) {
-                    final Node baseNode = internalSession.getNodeByIdentifier(prop.getValue().getString());
-                    final PropertyIterator baseNodeProps = baseNode.getProperties();
-                    while (baseNodeProps.hasNext()) {
-                        LOGGER.warn("base-resource prop: {}", baseNodeProps.nextProperty());
-                    }
-                }
+            if (base.hasProperty("jcr:versionableUuid")) {
+                LOGGER.debug("versionableUuid : {}", base.getProperty("jcr:versionableUuid").getValue().getString());
+                final Node baseNode = internalSession
+                        .getNodeByIdentifier(base.getProperty("jcr:versionableUuid").getValue().getString());
+                return nodeService.cast(baseNode);
             }
-
         } catch (final ItemNotFoundException e) {
-            LOGGER.debug("No item found with identifier");
-            e.printStackTrace();
-        } catch (final ValueFormatException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            LOGGER.error("Node with jcr:versionableUuid not found : {}", e.getMessage());
         } catch (final RepositoryException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            throw new RepositoryRuntimeException(e);
         }
-
-
-        final IdentifierConverter<Resource, FedoraResource> translator =
-                new DefaultIdentifierTranslator(session);
-        LOGGER.debug("This is a version so we test against the baseVersion.");
-
-        final List<Triple> bases = new ArrayList<>();
-        final RdfStream stream = resource.getTriples(translator, ReferencesRdfContext.class);
-        stream
-        // .filter(t -> t.getPredicate().getURI().equals(REPOSITORY_NAMESPACE + "baseVersion"))
-        .forEachRemaining(t -> {
-            LOGGER.debug("baseVersion {}", t);
-            // bases.add(t);
-        });
-
-        if (!bases.isEmpty() &&
-                bases.get(bases.size() - 1).getSubject().toString().startsWith(FEDORA_INTERNAL_PREFIX)) {
-            LOGGER.debug("predecessor has {} prefix", FEDORA_INTERNAL_PREFIX);
-            return nodeService.find(session,
-                    bases.get(bases.size() - 1).getSubject().toString().substring(FEDORA_INTERNAL_PREFIX.length()));
-        } else {
-            LOGGER.debug("no predecessors found");
-            return resource;
-        }
+        return resource;
     }
 
     @Override

@@ -16,6 +16,8 @@
 package org.fcrepo.auth.webac;
 
 import static org.fcrepo.auth.webac.URIConstants.WEBAC_ACCESS_CONTROL_VALUE;
+import static org.fcrepo.kernel.api.RdfCollectors.toModel;
+import static org.fcrepo.kernel.api.RdfContext.PROPERTIES;
 import static org.slf4j.LoggerFactory.getLogger;
 import static com.hp.hpl.jena.rdf.model.ResourceFactory.createProperty;
 
@@ -30,7 +32,6 @@ import org.fcrepo.kernel.api.identifiers.IdentifierConverter;
 import org.fcrepo.kernel.api.models.FedoraResource;
 import org.fcrepo.kernel.api.services.NodeService;
 import org.fcrepo.kernel.modeshape.rdf.impl.DefaultIdentifierTranslator;
-import org.fcrepo.kernel.modeshape.rdf.impl.PropertiesRdfContext;
 
 import org.slf4j.Logger;
 
@@ -72,8 +73,8 @@ public class LinkHeaderProvider implements UriAwareHttpHeaderFactory {
         WebACRolesProvider.getEffectiveAcl(resource).ifPresent(acls -> {
             // If the Acl is present we need to use the internal session to get its URI
             nodeService.find(internalSession, acls.resource.getPath())
-            .getTriples(translator, PropertiesRdfContext.class)
-            .asModel().listObjectsOfProperty(createProperty(WEBAC_ACCESS_CONTROL_VALUE))
+            .getTriples(translator, PROPERTIES)
+            .collect(toModel()).listObjectsOfProperty(createProperty(WEBAC_ACCESS_CONTROL_VALUE))
             .forEachRemaining(linkObj -> {
                 if (linkObj.isURIResource()) {
                     final Resource acl = linkObj.asResource();

@@ -30,6 +30,7 @@ import static org.fcrepo.auth.webac.URIConstants.WEBAC_AGENT_VALUE;
 import static org.fcrepo.auth.webac.URIConstants.WEBAC_AUTHORIZATION;
 import static org.fcrepo.auth.webac.URIConstants.WEBAC_MODE_VALUE;
 import static org.fcrepo.auth.webac.URIConstants.WEBAC_NAMESPACE_VALUE;
+import static org.fcrepo.kernel.api.RdfContext.PROPERTIES;
 import static org.fcrepo.kernel.modeshape.identifiers.NodeResourceConverter.nodeConverter;
 import static org.fcrepo.kernel.modeshape.utils.FedoraTypesUtils.isNonRdfSourceDescription;
 import static org.fcrepo.kernel.modeshape.utils.UncheckedFunction.uncheck;
@@ -72,7 +73,6 @@ import org.fcrepo.kernel.api.models.FedoraResource;
 import org.fcrepo.kernel.api.models.NonRdfSourceDescription;
 import org.fcrepo.kernel.api.services.NodeService;
 import org.fcrepo.kernel.modeshape.rdf.impl.DefaultIdentifierTranslator;
-import org.fcrepo.kernel.modeshape.rdf.impl.PropertiesRdfContext;
 import org.fcrepo.kernel.modeshape.utils.UncheckedPredicate;
 
 import org.modeshape.jcr.value.Path;
@@ -330,9 +330,9 @@ public class WebACRolesProvider implements AccessRolesProvider {
 
         final Predicate<Property> isMember = memberTestFromTypes.apply(resource.getTypes());
 
-        resource.getTriples(translator, PropertiesRdfContext.class)
+        resource.getTriples(translator, PROPERTIES)
             .filter(p -> isMember.test(model.asStatement(p).getPredicate()))
-            .forEachRemaining(t -> {
+            .forEach(t -> {
                 if (t.getObject().isURI()) {
                     members.add(t.getObject().getURI());
                 } else if (t.getObject().isLiteral()) {
@@ -387,9 +387,9 @@ public class WebACRolesProvider implements AccessRolesProvider {
             resource.getChildren().forEachRemaining(child -> {
                 if (child.getTypes().contains(WEBAC_AUTHORIZATION)) {
                     final Map<String, List<String>> aclTriples = new HashMap<>();
-                    child.getTriples(translator, PropertiesRdfContext.class)
+                    child.getTriples(translator, PROPERTIES)
                         .filter(p -> isAclPredicate.test(model.asStatement(p).getPredicate()))
-                        .forEachRemaining(t -> {
+                        .forEach(t -> {
                             aclTriples.putIfAbsent(t.getPredicate().getURI(), new ArrayList<>());
                             if (t.getObject().isURI()) {
                                 aclTriples.get(t.getPredicate().getURI()).add(
@@ -431,9 +431,9 @@ public class WebACRolesProvider implements AccessRolesProvider {
             final List<String> acls = new ArrayList<>();
             final Model model = createDefaultModel();
 
-            resource.getTriples(translator, PropertiesRdfContext.class)
+            resource.getTriples(translator, PROPERTIES)
                 .filter(t -> model.asStatement(t).getPredicate().hasURI(WEBAC_ACCESS_CONTROL_VALUE))
-                .forEachRemaining(t -> {
+                .forEach(t -> {
                     if (!t.getObject().isURI()) {
                         final String error = String.format("The value %s of the %s on this resource must be a URI",
                                 t.getObject(), WEBAC_ACCESS_CONTROL_VALUE);

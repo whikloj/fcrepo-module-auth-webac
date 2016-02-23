@@ -384,7 +384,7 @@ public class WebACRolesProvider implements AccessRolesProvider {
                     location.substring(FEDORA_INTERNAL_PREFIX.length()));
 
             // Read each child resource, filtering on acl:Authorization type, keeping only acl-prefixed triples.
-            resource.getChildren().forEachRemaining(child -> {
+            resource.getChildren().forEach(child -> {
                 if (child.getTypes().contains(WEBAC_AUTHORIZATION)) {
                     final Map<String, List<String>> aclTriples = new HashMap<>();
                     child.getTriples(translator, PROPERTIES)

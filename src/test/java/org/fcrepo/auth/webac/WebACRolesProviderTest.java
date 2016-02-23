@@ -174,7 +174,7 @@ public class WebACRolesProviderTest {
         when(mockAuthorizationResource1.getTriples(anyObject(), eq(PROPERTIES)))
                 .thenReturn(getRdfStreamFromResource(auth, TTL));
 
-        when(mockAclResource.getChildren()).thenReturn(Arrays.asList(mockAuthorizationResource1).iterator());
+        when(mockAclResource.getChildren()).thenReturn(of(mockAuthorizationResource1));
 
         final Map<String, List<String>> roles = roleProvider.getRoles(mockNode, true);
 
@@ -203,7 +203,7 @@ public class WebACRolesProviderTest {
         when(mockAuthorizationResource1.getTriples(anyObject(), eq(PROPERTIES)))
                 .thenReturn(getRdfStreamFromResource(auth, TTL));
 
-        when(mockAclResource.getChildren()).thenReturn(Arrays.asList(mockAuthorizationResource1).iterator());
+        when(mockAclResource.getChildren()).thenReturn(of(mockAuthorizationResource1));
 
         final Map<String, List<String>> roles = roleProvider.getRoles(mockNode, true);
 
@@ -231,7 +231,7 @@ public class WebACRolesProviderTest {
         when(mockAuthorizationResource1.getTriples(anyObject(), eq(PROPERTIES)))
                 .thenReturn(getRdfStreamFromResource(auth, TTL));
 
-        when(mockAclResource.getChildren()).thenReturn(Arrays.asList(mockAuthorizationResource1).iterator());
+        when(mockAclResource.getChildren()).thenReturn(of(mockAuthorizationResource1));
 
         final Map<String, List<String>> roles = roleProvider.getRoles(mockNode, true);
 
@@ -257,7 +257,7 @@ public class WebACRolesProviderTest {
         when(mockAuthorizationResource1.getTriples(anyObject(), eq(PROPERTIES)))
                 .thenReturn(getRdfStreamFromResource(auth, TTL));
 
-        when(mockAclResource.getChildren()).thenReturn(Arrays.asList(mockAuthorizationResource1).iterator());
+        when(mockAclResource.getChildren()).thenReturn(of(mockAuthorizationResource1));
 
         final Map<String, List<String>> roles = roleProvider.getRoles(mockNode, true);
 
@@ -292,8 +292,7 @@ public class WebACRolesProviderTest {
         when(mockAuthorizationResource2.getTriples(anyObject(), eq(PROPERTIES)))
                 .thenReturn(getRdfStreamFromResource(auth2, TTL));
 
-        when(mockAclResource.getChildren()).thenReturn(
-                Arrays.asList(mockAuthorizationResource1, mockAuthorizationResource2).iterator());
+        when(mockAclResource.getChildren()).thenReturn(of(mockAuthorizationResource1, mockAuthorizationResource2));
 
         final Map<String, List<String>> roles = roleProvider.getRoles(mockNode, true);
 
@@ -327,8 +326,7 @@ public class WebACRolesProviderTest {
         when(mockAuthorizationResource2.getTriples(anyObject(), eq(PROPERTIES)))
                 .thenReturn(getRdfStreamFromResource(auth2, TTL));
 
-        when(mockAclResource.getChildren()).thenReturn(
-                Arrays.asList(mockAuthorizationResource1, mockAuthorizationResource2).iterator());
+        when(mockAclResource.getChildren()).thenReturn(of(mockAuthorizationResource1, mockAuthorizationResource2));
 
         final Map<String, List<String>> roles = roleProvider.getRoles(mockNode, true);
 
@@ -363,8 +361,7 @@ public class WebACRolesProviderTest {
         when(mockAuthorizationResource2.getTriples(anyObject(), eq(PROPERTIES)))
                 .thenReturn(getRdfStreamFromResource(auth2, TTL));
 
-        when(mockAclResource.getChildren()).thenReturn(
-                Arrays.asList(mockAuthorizationResource1, mockAuthorizationResource2).iterator());
+        when(mockAclResource.getChildren()).thenReturn(of(mockAuthorizationResource1, mockAuthorizationResource2));
 
         final Map<String, List<String>> roles = roleProvider.getRoles(mockNode, true);
 
@@ -402,8 +399,7 @@ public class WebACRolesProviderTest {
         when(mockAuthorizationResource2.getTriples(anyObject(), eq(PROPERTIES)))
                 .thenReturn(getRdfStreamFromResource(auth2, TTL));
 
-        when(mockAclResource.getChildren()).thenReturn(
-                Arrays.asList(mockAuthorizationResource1, mockAuthorizationResource2).iterator());
+        when(mockAclResource.getChildren()).thenReturn(of(mockAuthorizationResource1, mockAuthorizationResource2));
 
         final Map<String, List<String>> roles = roleProvider.getRoles(mockNode, true);
 
@@ -440,8 +436,7 @@ public class WebACRolesProviderTest {
         when(mockAuthorizationResource2.getTriples(anyObject(), eq(PROPERTIES)))
                 .thenReturn(getRdfStreamFromResource(auth2, TTL));
 
-        when(mockAclResource.getChildren()).thenReturn(
-                Arrays.asList(mockAuthorizationResource1, mockAuthorizationResource2).iterator());
+        when(mockAclResource.getChildren()).thenReturn(of(mockAuthorizationResource1, mockAuthorizationResource2));
 
         final Map<String, List<String>> roles = roleProvider.getRoles(mockNode, true);
 
@@ -485,8 +480,7 @@ public class WebACRolesProviderTest {
         when(mockAgentClassResource.getTriples(anyObject(), eq(PROPERTIES)))
                 .thenReturn(getRdfStreamFromResource(group, TTL));
 
-        when(mockAclResource.getChildren()).thenReturn(
-                Arrays.asList(mockAuthorizationResource1).iterator());
+        when(mockAclResource.getChildren()).thenReturn(of(mockAuthorizationResource1));
 
         final Map<String, List<String>> roles = roleProvider.getRoles(mockNode, true);
 
@@ -531,8 +525,7 @@ public class WebACRolesProviderTest {
         when(mockAgentClassResource.getTriples(anyObject(), eq(PROPERTIES)))
                 .thenReturn(getRdfStreamFromResource(group, TTL));
 
-        when(mockAclResource.getChildren()).thenReturn(
-                Arrays.asList(mockAuthorizationResource1).iterator());
+        when(mockAclResource.getChildren()).thenReturn(of(mockAuthorizationResource1));
 
         final Map<String, List<String>> roles = roleProvider.getRoles(mockNode, true);
 

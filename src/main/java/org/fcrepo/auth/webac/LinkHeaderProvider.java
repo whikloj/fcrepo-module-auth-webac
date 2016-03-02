@@ -17,7 +17,7 @@ package org.fcrepo.auth.webac;
 
 import static org.fcrepo.auth.webac.URIConstants.WEBAC_ACCESS_CONTROL_VALUE;
 import static org.fcrepo.kernel.api.RdfCollectors.toModel;
-import static org.fcrepo.kernel.api.RdfContext.PROPERTIES;
+import static org.fcrepo.kernel.api.RequiredRdfContext.PROPERTIES;
 import static org.slf4j.LoggerFactory.getLogger;
 import static com.hp.hpl.jena.rdf.model.ResourceFactory.createProperty;
 

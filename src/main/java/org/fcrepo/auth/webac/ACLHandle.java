@@ -34,8 +34,8 @@ public class ACLHandle {
     /**
      * Default constructor.
      *
-     * @param uri
-     * @param resource
+     * @param uri the URI pointing to an ACL
+     * @param resource the requested FedoraResource
      */
     public ACLHandle(final URI uri, final FedoraResource resource) {
         this.uri = uri;

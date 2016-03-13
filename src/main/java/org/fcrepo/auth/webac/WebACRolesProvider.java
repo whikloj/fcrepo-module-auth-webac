@@ -94,6 +94,10 @@ public class WebACRolesProvider implements AccessRolesProvider {
 
     public static final String ROOT_AUTHORIZATION_PROPERTY = "fcrepo.auth.webac.authorization";
 
+    public static final String GROUP_AGENT_BASE_URI_PROPERTY = "fcrepo.auth.webac.groupAgent.baseUri";
+
+    public static final String USER_AGENT_BASE_URI_PROPERTY = "fcrepo.auth.webac.userAgent.baseUri";
+
     private static final Logger LOGGER = getLogger(WebACRolesProvider.class);
 
     private static final String FEDORA_INTERNAL_PREFIX = "info:fedora";
@@ -346,6 +350,8 @@ public class WebACRolesProvider implements AccessRolesProvider {
     private List<WebACAuthorization> getAuthorizations(final String location) {
 
         final Session internalSession = sessionFactory.getInternalSession();
+        final String userBaseUri = System.getProperty(USER_AGENT_BASE_URI_PROPERTY);
+        final String groupBaseUri = System.getProperty(GROUP_AGENT_BASE_URI_PROPERTY);
         final List<WebACAuthorization> authorizations = new ArrayList<>();
         final IdentifierConverter<Resource, FedoraResource> translator =
                 new DefaultIdentifierTranslator(internalSession);
@@ -365,9 +371,13 @@ public class WebACRolesProvider implements AccessRolesProvider {
                     final Map<String, List<String>> aclTriples = new HashMap<>();
                     child.getTriples(translator, PROPERTIES).filter(hasAclPredicate)
                         .forEach(triple -> {
-                            final List<String> values = aclTriples.computeIfAbsent(triple.getPredicate().getURI(),
+                            final String predicate = triple.getPredicate().getURI();
+                            final List<String> values = aclTriples.computeIfAbsent(predicate,
                                 key -> new ArrayList<>());
                             nodeToStringStream(triple.getObject()).forEach(values::add);
+                            if (predicate.equals(WEBAC_AGENT_VALUE)) {
+                                additionalAgentValues(triple.getObject()).forEach(values::add);
+                            }
                         });
                     // Create a WebACAuthorization object from the provided triples.
                     LOGGER.debug("Adding acl:Authorization from {}", child.getPath());
@@ -434,14 +444,33 @@ public class WebACRolesProvider implements AccessRolesProvider {
 
         getDefaultAcl().listStatements().mapWith(Statement::asTriple).forEachRemaining(triple -> {
             if (hasAclPredicate.test(triple)) {
-                final List<String> values = aclTriples.computeIfAbsent(triple.getPredicate().getURI(),
+                final String predicate = triple.getPredicate().getURI();
+                final List<String> values = aclTriples.computeIfAbsent(predicate,
                     key -> new ArrayList<>());
                 nodeToStringStream(triple.getObject()).forEach(values::add);
+                if (predicate.equals(WEBAC_AGENT_VALUE)) {
+                    additionalAgentValues(triple.getObject()).forEach(values::add);
+                }
             }
         });
 
         authorizations.add(createAuthorizationFromMap(aclTriples));
         return authorizations;
+    }
+
+    private static Stream<String> additionalAgentValues(final com.hp.hpl.jena.graph.Node object) {
+        final String groupBaseUri = System.getProperty(GROUP_AGENT_BASE_URI_PROPERTY);
+        final String userBaseUri = System.getProperty(USER_AGENT_BASE_URI_PROPERTY);
+
+        if (object.isURI()) {
+            final String uri = object.getURI();
+            if (userBaseUri != null && uri.startsWith(userBaseUri)) {
+                return of(uri.substring(userBaseUri.length()));
+            } else if (groupBaseUri != null && uri.startsWith(groupBaseUri)) {
+                return of(uri.substring(groupBaseUri.length()));
+            }
+        }
+        return empty();
     }
 
     private static Model getDefaultAcl() {

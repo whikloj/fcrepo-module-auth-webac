@@ -15,6 +15,7 @@
  */
 package org.fcrepo.auth.webac;
 
+import static java.util.Arrays.stream;
 import static java.util.Collections.unmodifiableMap;
 import static org.fcrepo.auth.webac.URIConstants.FOAF_AGENT_VALUE;
 import static org.fcrepo.auth.webac.URIConstants.WEBAC_MODE_CONTROL_VALUE;
@@ -30,7 +31,6 @@ import static org.modeshape.jcr.ModeShapePermissions.REMOVE_CHILD_NODES;
 import static org.modeshape.jcr.ModeShapePermissions.SET_PROPERTY;
 
 import java.security.Principal;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -99,28 +99,15 @@ public class WebACAuthorizationDelegate extends AbstractRolesAuthorizationDelega
         /*
          * If any value in the actions Array is NOT also in the roles Set, the request should be denied.
          * Otherwise, e.g. all of the actions values are contained in the roles set, the request is approved.
-         * 
+         *
          * The logic here may not be immediately obvious. The process is thus:
          *   map: map the modeshape action to a webac action
-         *   filter: ALL of these actions MUST exist in the roles Set, so if any action
-         *      value does NOT exist in the roles Set, we want to know about that
-         *   findFirst: If any value makes it through that filter, it is enough to invalidate
-         *      the request. This is evaluated lazily, so the first item encountered will
-         *      short-circut the processing of the rest of the stream.
-         *   isPresent: this returns true if any value passed through the filter, but we
-         *      actually want to invert that logic, hence the ! at the beginning of the expression.
+         *   allMatch: verify that ALL actions MUST exist in the roles Set
          */
-        final boolean permit = !Arrays.asList(actions).stream()
-                 .map(actionMap::get)
-                 .filter(x -> !roles.contains(x))
-                 .findFirst()
-                 .isPresent();
+        final boolean permit = stream(actions).map(actionMap::get).allMatch(roles::contains);
 
         LOGGER.debug("Request for actions: {}, on path: {}, with roles: {}. Permission={}",
-                actions,
-                absPath,
-                roles,
-                permit);
+                actions, absPath, roles, permit);
 
         return permit;
     }

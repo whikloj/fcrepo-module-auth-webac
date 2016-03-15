@@ -38,6 +38,7 @@ import static org.springframework.test.util.ReflectionTestUtils.setField;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -140,7 +141,7 @@ public class WebACRolesProviderTest {
                 .thenReturn(new DefaultRdfStream(createURI("subject")));
         when(mockParentNode.getDepth()).thenReturn(0);
 
-        final Map<String, List<String>> roles = roleProvider.getRoles(mockNode, true);
+        final Map<String, Collection<String>> roles = roleProvider.getRoles(mockNode, true);
 
         assertTrue("There should be no agents in the roles map", roles.isEmpty());
     }
@@ -176,7 +177,7 @@ public class WebACRolesProviderTest {
 
         when(mockAclResource.getChildren()).thenReturn(of(mockAuthorizationResource1));
 
-        final Map<String, List<String>> roles = roleProvider.getRoles(mockNode, true);
+        final Map<String, Collection<String>> roles = roleProvider.getRoles(mockNode, true);
 
         assertEquals("There should be exactly one agent in the role map", 1, roles.size());
         assertEquals("The agent should have exactly two modes", 2, roles.get(agent).size());
@@ -205,7 +206,7 @@ public class WebACRolesProviderTest {
 
         when(mockAclResource.getChildren()).thenReturn(of(mockAuthorizationResource1));
 
-        final Map<String, List<String>> roles = roleProvider.getRoles(mockNode, true);
+        final Map<String, Collection<String>> roles = roleProvider.getRoles(mockNode, true);
 
         assertEquals("There should be exactly one agent in the role map", 1, roles.size());
         assertEquals("The agent should have exactly two modes", 2, roles.get(agent).size());
@@ -233,7 +234,7 @@ public class WebACRolesProviderTest {
 
         when(mockAclResource.getChildren()).thenReturn(of(mockAuthorizationResource1));
 
-        final Map<String, List<String>> roles = roleProvider.getRoles(mockNode, true);
+        final Map<String, Collection<String>> roles = roleProvider.getRoles(mockNode, true);
 
         assertTrue("There should be no agents associated with this object", roles.isEmpty());
     }
@@ -259,7 +260,7 @@ public class WebACRolesProviderTest {
 
         when(mockAclResource.getChildren()).thenReturn(of(mockAuthorizationResource1));
 
-        final Map<String, List<String>> roles = roleProvider.getRoles(mockNode, true);
+        final Map<String, Collection<String>> roles = roleProvider.getRoles(mockNode, true);
 
         assertEquals("There should be exactly one agent in the role map", 1, roles.size());
         assertEquals("The agent should have exactly two modes", 2, roles.get(agent).size());
@@ -294,7 +295,7 @@ public class WebACRolesProviderTest {
 
         when(mockAclResource.getChildren()).thenReturn(of(mockAuthorizationResource1, mockAuthorizationResource2));
 
-        final Map<String, List<String>> roles = roleProvider.getRoles(mockNode, true);
+        final Map<String, Collection<String>> roles = roleProvider.getRoles(mockNode, true);
 
         assertEquals("There should be exactly one agent in the roles map", 1, roles.size());
         assertEquals("The agent should have exactly one mode", 1, roles.get(agent).size());
@@ -328,7 +329,7 @@ public class WebACRolesProviderTest {
 
         when(mockAclResource.getChildren()).thenReturn(of(mockAuthorizationResource1, mockAuthorizationResource2));
 
-        final Map<String, List<String>> roles = roleProvider.getRoles(mockNode, true);
+        final Map<String, Collection<String>> roles = roleProvider.getRoles(mockNode, true);
 
         assertEquals("There should be exactly one agent", 1, roles.size());
         assertEquals("The agent should have one mode", 1, roles.get(agent).size());
@@ -363,7 +364,7 @@ public class WebACRolesProviderTest {
 
         when(mockAclResource.getChildren()).thenReturn(of(mockAuthorizationResource1, mockAuthorizationResource2));
 
-        final Map<String, List<String>> roles = roleProvider.getRoles(mockNode, true);
+        final Map<String, Collection<String>> roles = roleProvider.getRoles(mockNode, true);
 
         assertEquals("There should be exactly two agents", 2, roles.size());
         assertEquals("The agent should have one mode", 1, roles.get(agent1).size());
@@ -401,7 +402,7 @@ public class WebACRolesProviderTest {
 
         when(mockAclResource.getChildren()).thenReturn(of(mockAuthorizationResource1, mockAuthorizationResource2));
 
-        final Map<String, List<String>> roles = roleProvider.getRoles(mockNode, true);
+        final Map<String, Collection<String>> roles = roleProvider.getRoles(mockNode, true);
 
         assertEquals("There should be exactly two agents", 2, roles.size());
         assertEquals("The agent should have one mode", 1, roles.get(agent1).size());
@@ -438,7 +439,7 @@ public class WebACRolesProviderTest {
 
         when(mockAclResource.getChildren()).thenReturn(of(mockAuthorizationResource1, mockAuthorizationResource2));
 
-        final Map<String, List<String>> roles = roleProvider.getRoles(mockNode, true);
+        final Map<String, Collection<String>> roles = roleProvider.getRoles(mockNode, true);
 
         assertEquals("There should be exactly agent", 1, roles.size());
         assertEquals("The agent should have one mode", 1, roles.get(agent1).size());
@@ -482,7 +483,7 @@ public class WebACRolesProviderTest {
 
         when(mockAclResource.getChildren()).thenReturn(of(mockAuthorizationResource1));
 
-        final Map<String, List<String>> roles = roleProvider.getRoles(mockNode, true);
+        final Map<String, Collection<String>> roles = roleProvider.getRoles(mockNode, true);
 
         assertEquals("There should be exactly two agents", 2, roles.size());
         assertEquals("The agent should have two modes", 2, roles.get(agent1).size());
@@ -527,7 +528,7 @@ public class WebACRolesProviderTest {
 
         when(mockAclResource.getChildren()).thenReturn(of(mockAuthorizationResource1));
 
-        final Map<String, List<String>> roles = roleProvider.getRoles(mockNode, true);
+        final Map<String, Collection<String>> roles = roleProvider.getRoles(mockNode, true);
 
         assertEquals("There should be exactly zero agents", 0, roles.size());
     }
@@ -541,7 +542,7 @@ public class WebACRolesProviderTest {
         when(mockResource.getPath()).thenReturn("/");
         when(mockResource.getTypes()).thenReturn(
                 Arrays.asList(URI.create(REPOSITORY_NAMESPACE + "Resource")));
-        final Map<String, List<String>> roles = roleProvider.getRoles(mockNode, true);
+        final Map<String, Collection<String>> roles = roleProvider.getRoles(mockNode, true);
 
         assertEquals("There should be exactly one agent", 1, roles.size());
         assertEquals("The agent should have zero modes", 0, roles.get(agent1).size());
@@ -560,7 +561,7 @@ public class WebACRolesProviderTest {
                 Arrays.asList(URI.create(REPOSITORY_NAMESPACE + "Resource")));
 
         System.setProperty(ROOT_AUTHORIZATION_PROPERTY, "./target/test-classes/logback-test.xml");
-        final Map<String, List<String>> roles = roleProvider.getRoles(mockNode, true);
+        final Map<String, Collection<String>> roles = roleProvider.getRoles(mockNode, true);
         System.clearProperty(ROOT_AUTHORIZATION_PROPERTY);
 
         assertEquals("There should be exactly one agent", 1, roles.size());
@@ -578,7 +579,7 @@ public class WebACRolesProviderTest {
                 Arrays.asList(URI.create(REPOSITORY_NAMESPACE + "Resource")));
 
         System.setProperty(ROOT_AUTHORIZATION_PROPERTY, "./target/test-classes/test-root-authorization.ttl");
-        final Map<String, List<String>> roles = roleProvider.getRoles(mockNode, true);
+        final Map<String, Collection<String>> roles = roleProvider.getRoles(mockNode, true);
         System.clearProperty(ROOT_AUTHORIZATION_PROPERTY);
 
         assertEquals("There should be exactly one agent", 1, roles.size());

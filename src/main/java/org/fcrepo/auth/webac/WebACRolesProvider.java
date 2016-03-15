@@ -25,7 +25,6 @@ import static java.util.stream.Stream.empty;
 import static java.util.stream.Stream.of;
 import static com.hp.hpl.jena.graph.NodeFactory.createURI;
 import static com.hp.hpl.jena.rdf.model.ModelFactory.createDefaultModel;
-import static com.google.common.collect.Maps.transformValues;
 import static org.apache.jena.riot.Lang.TTL;
 import static org.fcrepo.auth.webac.URIConstants.FOAF_AGENT_VALUE;
 import static org.fcrepo.auth.webac.URIConstants.FOAF_GROUP;
@@ -119,7 +118,7 @@ public class WebACRolesProvider implements AccessRolesProvider {
     }
 
     @Override
-    public Map<String, List<String>> findRolesForPath(final Path absPath, final Session session)
+    public Map<String, Collection<String>> findRolesForPath(final Path absPath, final Session session)
             throws RepositoryException {
         return getAgentRoles(locateResource(absPath, session));
     }
@@ -168,14 +167,14 @@ public class WebACRolesProvider implements AccessRolesProvider {
     }
 
     @Override
-    public Map<String, List<String>> getRoles(final Node node, final boolean effective) {
+    public Map<String, Collection<String>> getRoles(final Node node, final boolean effective) {
         return getAgentRoles(nodeService.cast(node));
     }
 
     /**
      *  For a given FedoraResource, get a mapping of acl:agent values to acl:mode values.
      */
-    private Map<String, List<String>> getAgentRoles(final FedoraResource resource) {
+    private Map<String, Collection<String>> getAgentRoles(final FedoraResource resource) {
         LOGGER.debug("Getting agent roles for: {}", resource.getPath());
 
         // Get the effective ACL by searching the target node and any ancestors.
@@ -228,7 +227,7 @@ public class WebACRolesProvider implements AccessRolesProvider {
         // the target (or acl-bearing ancestor) resource path or rdf:type.
         // Then, assign all acceptable acl:mode values to the relevant acl:agent values: this creates a UNION
         // of acl:modes for each particular acl:agent.
-        final Map<String, Set<String>> effectiveRoles = new HashMap<>();
+        final Map<String, Collection<String>> effectiveRoles = new HashMap<>();
         authorizations.stream()
             .filter(checkAccessTo.or(checkAccessToClass))
             .forEach(auth -> {
@@ -241,8 +240,7 @@ public class WebACRolesProvider implements AccessRolesProvider {
 
         LOGGER.debug("Unfiltered ACL: {}", effectiveRoles);
 
-        // Transform the effectiveRoles values from a Set to a List.
-        return transformValues(effectiveRoles, ArrayList::new);
+        return effectiveRoles;
     }
 
     /**

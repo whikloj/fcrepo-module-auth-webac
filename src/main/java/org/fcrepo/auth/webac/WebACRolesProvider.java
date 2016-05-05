@@ -40,6 +40,7 @@ import static org.fcrepo.auth.webac.URIConstants.WEBAC_NAMESPACE_VALUE;
 import static org.fcrepo.kernel.api.RequiredRdfContext.PROPERTIES;
 import static org.fcrepo.kernel.modeshape.identifiers.NodeResourceConverter.nodeConverter;
 import static org.fcrepo.kernel.modeshape.utils.FedoraTypesUtils.isNonRdfSourceDescription;
+import static org.fcrepo.kernel.modeshape.utils.FedoraTypesUtils.getJcrNode;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.File;
@@ -152,7 +153,7 @@ public class WebACRolesProvider implements AccessRolesProvider {
         final Session internalSession = sessionFactory.getInternalSession();
 
         try {
-            final VersionHistory base = ((Version) resource.getNode()).getContainingHistory();
+            final VersionHistory base = ((Version) getJcrNode(resource)).getContainingHistory();
             if (base.hasProperty(JCR_VERSIONABLE_UUID_PROPERTY)) {
                 final String versionUuid = base.getProperty(JCR_VERSIONABLE_UUID_PROPERTY).getValue().getString();
                 LOGGER.debug("versionableUuid : {}", versionUuid);
@@ -179,8 +180,8 @@ public class WebACRolesProvider implements AccessRolesProvider {
 
         // Get the effective ACL by searching the target node and any ancestors.
         final Optional<ACLHandle> effectiveAcl = getEffectiveAcl(
-                isNonRdfSourceDescription.test(resource.getNode()) ?
-                    ((NonRdfSourceDescription)nodeConverter.convert(resource.getNode())).getDescribedResource() :
+                isNonRdfSourceDescription.test(getJcrNode(resource)) ?
+                    ((NonRdfSourceDescription)nodeConverter.convert(getJcrNode(resource))).getDescribedResource() :
                     resource);
 
         // Construct a list of acceptable acl:accessTo values for the target resource.
@@ -396,7 +397,7 @@ public class WebACRolesProvider implements AccessRolesProvider {
     static Optional<ACLHandle> getEffectiveAcl(final FedoraResource resource) {
         try {
             final IdentifierConverter<Resource, FedoraResource> translator =
-                new DefaultIdentifierTranslator(resource.getNode().getSession());
+                new DefaultIdentifierTranslator(getJcrNode(resource).getSession());
             final List<String> acls = resource.getTriples(translator, PROPERTIES)
                     .filter(triple -> triple.getPredicate().equals(createURI(WEBAC_ACCESS_CONTROL_VALUE)))
                     .map(triple -> {
@@ -414,7 +415,7 @@ public class WebACRolesProvider implements AccessRolesProvider {
                     LOGGER.warn("Found multiple ACLs defined for this node. Using: {}", acls.get(0));
                 }
                 return Optional.of(new ACLHandle(URI.create(acls.get(0)), resource));
-            } else if (resource.getNode().getDepth() == 0) {
+            } else if (getJcrNode(resource).getDepth() == 0) {
                 LOGGER.debug("No ACLs defined on this node or in parent hierarchy");
                 return Optional.empty();
             } else {

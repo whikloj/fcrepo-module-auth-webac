@@ -57,6 +57,7 @@ import org.fcrepo.kernel.api.RdfStream;
 import org.fcrepo.kernel.api.models.FedoraResource;
 import org.fcrepo.kernel.api.rdf.DefaultRdfStream;
 import org.fcrepo.kernel.api.services.NodeService;
+import org.fcrepo.kernel.modeshape.FedoraResourceImpl;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -76,10 +77,7 @@ public class WebACRolesProviderTest {
     private static final String FEDORA_URI_PREFIX = "file:///rest";
 
     @Mock
-    private Node mockNode;
-
-    @Mock
-    private Node mockParentNode;
+    private Node mockNode, mockParentNode;
 
     @Mock
     private Session mockSession;
@@ -91,22 +89,11 @@ public class WebACRolesProviderTest {
     private NodeService mockNodeService;
 
     @Mock
-    private FedoraResource mockResource;
+    private FedoraResourceImpl mockResource, mockParentResource;
 
     @Mock
-    private FedoraResource mockParentResource;
-
-    @Mock
-    private FedoraResource mockAclResource;
-
-    @Mock
-    private FedoraResource mockAgentClassResource;
-
-    @Mock
-    private FedoraResource mockAuthorizationResource1;
-
-    @Mock
-    private FedoraResource mockAuthorizationResource2;
+    private FedoraResource mockAclResource, mockAgentClassResource,
+            mockAuthorizationResource1, mockAuthorizationResource2;
 
     @Mock
     private Property mockProperty;

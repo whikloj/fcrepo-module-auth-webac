@@ -18,6 +18,8 @@ package org.fcrepo.auth.webac;
 import static org.fcrepo.auth.webac.URIConstants.WEBAC_MODE_CONTROL_VALUE;
 import static org.fcrepo.auth.webac.URIConstants.WEBAC_MODE_READ_VALUE;
 import static org.fcrepo.auth.webac.URIConstants.WEBAC_MODE_WRITE_VALUE;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.modeshape.jcr.ModeShapePermissions.ADD_NODE;
 import static org.modeshape.jcr.ModeShapePermissions.MODIFY_ACCESS_CONTROL;
 import static org.modeshape.jcr.ModeShapePermissions.READ;
@@ -26,9 +28,6 @@ import static org.modeshape.jcr.ModeShapePermissions.REGISTER_NAMESPACE;
 import static org.modeshape.jcr.ModeShapePermissions.REMOVE;
 import static org.modeshape.jcr.ModeShapePermissions.REMOVE_CHILD_NODES;
 import static org.modeshape.jcr.ModeShapePermissions.SET_PROPERTY;
-
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -105,15 +104,6 @@ public class WebACAuthorizationDelegateTest {
     }
 
     @Test
-    public void testCanWrite2() {
-        final String[] actions = {REGISTER_NAMESPACE};
-        final Set<String> roles = new HashSet<>();
-        roles.add(WEBAC_MODE_WRITE_VALUE);
-
-        assertTrue(webacAD.rolesHavePermission(mockSession, "/fake/path", actions, roles));
-    }
-
-    @Test
     public void testCanWrite3() {
         final String[] actions = {REMOVE};
         final Set<String> roles = new HashSet<>();
@@ -142,7 +132,7 @@ public class WebACAuthorizationDelegateTest {
 
     @Test
     public void testCanWrite6() {
-        final String[] actions = {SET_PROPERTY, ADD_NODE, REGISTER_NAMESPACE, REMOVE, REMOVE_CHILD_NODES};
+        final String[] actions = {SET_PROPERTY, ADD_NODE, REMOVE, REMOVE_CHILD_NODES};
         final Set<String> roles = new HashSet<>();
         roles.add(WEBAC_MODE_WRITE_VALUE);
 

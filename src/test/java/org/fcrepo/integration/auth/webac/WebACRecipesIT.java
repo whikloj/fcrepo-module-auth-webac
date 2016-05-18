@@ -15,22 +15,22 @@
  */
 package org.fcrepo.integration.auth.webac;
 
-import static javax.ws.rs.core.Response.Status.CREATED;
 import static java.util.Arrays.stream;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static javax.ws.rs.core.Response.Status.CREATED;
 import static org.fcrepo.auth.webac.URIConstants.WEBAC_ACCESS_CONTROL_VALUE;
 import static org.fcrepo.auth.webac.WebACRolesProvider.ROOT_AUTHORIZATION_PROPERTY;
 import static org.fcrepo.kernel.api.RdfLexicon.DC_NAMESPACE;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Optional;
 
 import javax.ws.rs.core.Link;
 
-import org.fcrepo.integration.http.api.AbstractResourceIT;
 import org.apache.commons.codec.binary.Base64;
+import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -38,10 +38,10 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPatch;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
-import org.apache.http.message.AbstractHttpMessage;
-import org.apache.http.Header;
 import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.entity.StringEntity;
+import org.apache.http.message.AbstractHttpMessage;
+import org.fcrepo.integration.http.api.AbstractResourceIT;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -596,6 +596,41 @@ public class WebACRecipesIT extends AbstractResourceIT {
         setAuth(getReq, "fedoraAdmin");
         assertEquals("Non-URI accessControl property did not throw Exception", HttpStatus.SC_BAD_REQUEST,
                 getStatus(getReq));
+    }
+
+    @Test
+    public void testRegisterNamespace() throws IOException {
+        final String testObj = ingestObj("/rest/test_namespace");
+        final String acl1 = ingestAcl("fedoraAdmin", "/acls/13/acl.ttl", "/acls/13/authorization.ttl");
+        linkToAcl(testObj, acl1);
+
+        final String id = "/rest/test_namespace" + getRandomUniqueId();
+        ingestObj(id);
+
+        final HttpPatch patchReq = patchObjMethod(id);
+        setAuth(patchReq, "smith123");
+        patchReq.addHeader("Content-type", "application/sparql-update");
+        patchReq.setEntity(new StringEntity("PREFIX novel: <info://" + getRandomUniqueId() + ">\n"
+                + "INSERT DATA { <> novel:value 'test' }"));
+        assertEquals(HttpStatus.SC_NO_CONTENT, getStatus(patchReq));
+    }
+
+    @Test
+    public void testRegisterNodeType() throws IOException {
+        final String testObj = ingestObj("/rest/test_nodetype");
+        final String acl1 = ingestAcl("fedoraAdmin", "/acls/14/acl.ttl", "/acls/14/authorization.ttl");
+        linkToAcl(testObj, acl1);
+
+        final String id = "/rest/test_nodetype" + getRandomUniqueId();
+        ingestObj(id);
+
+        final HttpPatch patchReq = patchObjMethod(id);
+        setAuth(patchReq, "smith123");
+        patchReq.addHeader("Content-type", "application/sparql-update");
+        patchReq.setEntity(new StringEntity("PREFIX dc: <http://purl.org/dc/elements/1.1/>\n"
+                + "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n"
+                + "INSERT DATA { <> rdf:type dc:type }"));
+        assertEquals(HttpStatus.SC_NO_CONTENT, getStatus(patchReq));
     }
 
 }

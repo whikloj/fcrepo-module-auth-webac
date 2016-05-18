@@ -25,7 +25,6 @@ import static org.modeshape.jcr.ModeShapePermissions.ADD_NODE;
 import static org.modeshape.jcr.ModeShapePermissions.MODIFY_ACCESS_CONTROL;
 import static org.modeshape.jcr.ModeShapePermissions.READ;
 import static org.modeshape.jcr.ModeShapePermissions.READ_ACCESS_CONTROL;
-import static org.modeshape.jcr.ModeShapePermissions.REGISTER_NAMESPACE;
 import static org.modeshape.jcr.ModeShapePermissions.REMOVE;
 import static org.modeshape.jcr.ModeShapePermissions.REMOVE_CHILD_NODES;
 import static org.modeshape.jcr.ModeShapePermissions.SET_PROPERTY;
@@ -38,7 +37,6 @@ import java.util.Set;
 import javax.jcr.Session;
 
 import org.fcrepo.auth.roles.common.AbstractRolesAuthorizationDelegate;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,7 +62,6 @@ public class WebACAuthorizationDelegate extends AbstractRolesAuthorizationDelega
         map.put(READ, WEBAC_MODE_READ_VALUE);
         // WEBAC_MODE_WRITE Permissions
         map.put(ADD_NODE, WEBAC_MODE_WRITE_VALUE);
-        map.put(REGISTER_NAMESPACE, WEBAC_MODE_WRITE_VALUE);
         map.put(REMOVE, WEBAC_MODE_WRITE_VALUE);
         map.put(REMOVE_CHILD_NODES, WEBAC_MODE_WRITE_VALUE);
         map.put(SET_PROPERTY, WEBAC_MODE_WRITE_VALUE);

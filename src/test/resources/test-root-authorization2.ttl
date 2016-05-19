@@ -4,7 +4,7 @@
 
 <> a acl:Authorization ;
    rdfs:label "(Test) Root Authorization" ;
-   rdfs:comment "Provide read access to all resources to the testAdminUser agent." ;
-   acl:agent "smith123" ;
+   rdfs:comment "Provide read access to all resources to the user06a agent." ;
+   acl:agent "user06a" ;
    acl:mode acl:Read ;
    acl:accessTo <info:fedora/> .

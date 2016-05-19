@@ -4,4 +4,4 @@ PREFIX pcdm: <http://pcdm.org/models#>
 <> a acl:Authorization ;
 acl:accessToClass pcdm:Object ;
 acl:mode acl:Read, acl:Write;
-acl:agent "testuser" .
+acl:agent "user10" .

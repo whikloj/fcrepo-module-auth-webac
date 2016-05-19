@@ -167,9 +167,9 @@ public class WebACRecipesIT extends AbstractResourceIT {
         final HttpGet request = getObjMethod(testObj.replace(serverAddress, ""));
         assertEquals("Anonymous can read " + testObj, HttpStatus.SC_FORBIDDEN, getStatus(request));
 
-        setAuth(request, "smith123");
+        setAuth(request, "user01");
         try (final CloseableHttpResponse response = execute(request)) {
-            assertEquals("User 'smith123' can't read" + testObj, HttpStatus.SC_OK, getStatus(response));
+            assertEquals("User 'user01' can't read" + testObj, HttpStatus.SC_OK, getStatus(response));
             // This gets the Link headers and filters for the correct one (aclLink::equals) defined above.
             final Optional<String> header = stream(response.getHeaders("Link")).map(Header::getValue)
                     .filter(aclLink::equals).findFirst();
@@ -179,9 +179,9 @@ public class WebACRecipesIT extends AbstractResourceIT {
 
         final String childObj = ingestObj("/rest/webacl_box1/child");
         final HttpGet getReq = getObjMethod(childObj.replace(serverAddress, ""));
-        setAuth(getReq, "smith123");
+        setAuth(getReq, "user01");
         try (final CloseableHttpResponse response = execute(getReq)) {
-            assertEquals("User 'smith123' can't read child of " + testObj, HttpStatus.SC_OK, getStatus(response));
+            assertEquals("User 'user01' can't read child of " + testObj, HttpStatus.SC_OK, getStatus(response));
             // This gets the Link headers and filters for the correct one (aclLink::equals) defined above.
             final Optional<String> header = stream(response.getHeaders("Link")).map(Header::getValue)
                     .filter(aclLink::equals).findFirst();
@@ -418,20 +418,20 @@ public class WebACRecipesIT extends AbstractResourceIT {
         final HttpGet requestGet1 = getObjMethod(id);
         assertEquals(HttpStatus.SC_FORBIDDEN, getStatus(requestGet1));
 
-        logger.debug("Can username 'smith123' read {} (no ACL)", id);
+        logger.debug("Can username 'user06a' read {} (no ACL)", id);
         final HttpGet requestGet2 = getObjMethod(id);
-        setAuth(requestGet2, "smith123");
+        setAuth(requestGet2, "user06a");
         assertEquals(HttpStatus.SC_FORBIDDEN, getStatus(requestGet2));
 
-        logger.debug("Can username 'smith456' read {} (no ACL)", id);
+        logger.debug("Can username 'notuser06b' read {} (no ACL)", id);
         final HttpGet requestGet3 = getObjMethod(id);
-        setAuth(requestGet3, "smith456");
+        setAuth(requestGet3, "user06b");
         assertEquals(HttpStatus.SC_FORBIDDEN, getStatus(requestGet3));
 
         System.setProperty(ROOT_AUTHORIZATION_PROPERTY, "./target/test-classes/test-root-authorization2.ttl");
-        logger.debug("Can username 'smith123' read {} (overridden system ACL)", id);
+        logger.debug("Can username 'user06a' read {} (overridden system ACL)", id);
         final HttpGet requestGet4 = getObjMethod(id);
-        setAuth(requestGet4, "smith123");
+        setAuth(requestGet4, "user06a");
         assertEquals(HttpStatus.SC_OK, getStatus(requestGet4));
         System.clearProperty(ROOT_AUTHORIZATION_PROPERTY);
 
@@ -442,14 +442,14 @@ public class WebACRecipesIT extends AbstractResourceIT {
         final HttpGet requestGet5 = getObjMethod(id);
         assertEquals(HttpStatus.SC_FORBIDDEN, getStatus(requestGet5));
 
-        logger.debug("Can username 'smith123' read {} (ACL present)", testObj);
+        logger.debug("Can username 'user06a' read {} (ACL present)", testObj);
         final HttpGet requestGet6 = getObjMethod(id);
-        setAuth(requestGet6, "smith123");
+        setAuth(requestGet6, "user06a");
         assertEquals(HttpStatus.SC_OK, getStatus(requestGet6));
 
-        logger.debug("Can username 'smith456' read {} (ACL present)", testObj);
+        logger.debug("Can username 'user06b' read {} (ACL present)", testObj);
         final HttpGet requestGet7 = getObjMethod(id);
-        setAuth(requestGet7, "smith456");
+        setAuth(requestGet7, "user06b");
         assertEquals(HttpStatus.SC_OK, getStatus(requestGet7));
     }
 
@@ -473,10 +473,10 @@ public class WebACRecipesIT extends AbstractResourceIT {
         final HttpGet requestGet1 = getObjMethod(id);
         assertEquals(HttpStatus.SC_FORBIDDEN, getStatus(requestGet1));
 
-        logger.debug("Can username 'smith123' read {}", testObj);
+        logger.debug("Can username 'user07' read {}", testObj);
         final HttpGet requestGet2 = getObjMethod(id);
 
-        setAuth(requestGet2, "smith123");
+        setAuth(requestGet2, "user07");
         assertEquals(HttpStatus.SC_OK, getStatus(requestGet2));
     }
 
@@ -492,9 +492,9 @@ public class WebACRecipesIT extends AbstractResourceIT {
         final HttpGet requestGet1 = getObjMethod(id);
         assertEquals(HttpStatus.SC_FORBIDDEN, getStatus(requestGet1));
 
-        logger.debug("Can username 'smith123' read {}", testObj);
+        logger.debug("Can username 'user08' read {}", testObj);
         final HttpGet requestGet2 = getObjMethod(id);
-        setAuth(requestGet2, "smith123");
+        setAuth(requestGet2, "user08");
         assertEquals(HttpStatus.SC_OK, getStatus(requestGet2));
     }
 
@@ -517,8 +517,8 @@ public class WebACRecipesIT extends AbstractResourceIT {
         linkToAcl(idVersion, acl);
 
         final HttpGet requestGet1 = getObjMethod(idVersion);
-        setAuth(requestGet1, "testuser");
-        assertEquals("testuser can't read object", HttpStatus.SC_OK, getStatus(requestGet1));
+        setAuth(requestGet1, "user10");
+        assertEquals("user10 can't read object", HttpStatus.SC_OK, getStatus(requestGet1));
 
         final HttpPost requestPost1 = postObjMethod(idVersion + "/fcr:versions");
         requestPost1.addHeader("Slug", "v0");
@@ -526,8 +526,8 @@ public class WebACRecipesIT extends AbstractResourceIT {
         assertEquals("Unable to create a new version", HttpStatus.SC_CREATED, getStatus(requestPost1));
 
         final HttpGet requestGet2 = getObjMethod(idVersion);
-        setAuth(requestGet2, "testuser");
-        assertEquals("testuser can't read versioned object", HttpStatus.SC_OK, getStatus(requestGet2));
+        setAuth(requestGet2, "user10");
+        assertEquals("user10 can't read versioned object", HttpStatus.SC_OK, getStatus(requestGet2));
     }
 
     @Test
@@ -545,7 +545,7 @@ public class WebACRecipesIT extends AbstractResourceIT {
 
         final HttpGet adminDelegatedGet = getObjMethod(targetPath);
         setAuth(adminDelegatedGet, "fedoraAdmin");
-        adminDelegatedGet.addHeader("On-Behalf-Of", "user1");
+        adminDelegatedGet.addHeader("On-Behalf-Of", "user11");
         assertEquals("delegated user can read object", HttpStatus.SC_OK, getStatus(adminDelegatedGet));
 
         final HttpGet adminUnauthorizedDelegatedGet = getObjMethod(targetPath);
@@ -567,16 +567,16 @@ public class WebACRecipesIT extends AbstractResourceIT {
         linkToAcl(idVersion, acl);
 
         final HttpGet requestGet1 = getObjMethod(idVersion);
-        setAuth(requestGet1, "testuser");
+        setAuth(requestGet1, "user12");
         assertEquals("testuser can't read object", HttpStatus.SC_OK, getStatus(requestGet1));
 
         final HttpPost requestPost1 = postObjMethod(idVersion + "/fcr:versions");
         requestPost1.addHeader("Slug", "v0");
-        setAuth(requestPost1, "testuser");
+        setAuth(requestPost1, "user12");
         assertEquals("Unable to create a new version", HttpStatus.SC_CREATED, getStatus(requestPost1));
 
         final HttpGet requestGet2 = getObjMethod(idVersion);
-        setAuth(requestGet2, "testuser");
+        setAuth(requestGet2, "user12");
         assertEquals("testuser can't read versioned object", HttpStatus.SC_OK, getStatus(requestGet2));
     }
 
@@ -604,11 +604,11 @@ public class WebACRecipesIT extends AbstractResourceIT {
         final String acl1 = ingestAcl("fedoraAdmin", "/acls/13/acl.ttl", "/acls/13/authorization.ttl");
         linkToAcl(testObj, acl1);
 
-        final String id = "/rest/test_namespace" + getRandomUniqueId();
+        final String id = "/rest/test_namespace/" + getRandomUniqueId();
         ingestObj(id);
 
         final HttpPatch patchReq = patchObjMethod(id);
-        setAuth(patchReq, "smith123");
+        setAuth(patchReq, "user13");
         patchReq.addHeader("Content-type", "application/sparql-update");
         patchReq.setEntity(new StringEntity("PREFIX novel: <info://" + getRandomUniqueId() + ">\n"
                 + "INSERT DATA { <> novel:value 'test' }"));
@@ -621,16 +621,50 @@ public class WebACRecipesIT extends AbstractResourceIT {
         final String acl1 = ingestAcl("fedoraAdmin", "/acls/14/acl.ttl", "/acls/14/authorization.ttl");
         linkToAcl(testObj, acl1);
 
-        final String id = "/rest/test_nodetype" + getRandomUniqueId();
+        final String id = "/rest/test_nodetype/" + getRandomUniqueId();
         ingestObj(id);
 
         final HttpPatch patchReq = patchObjMethod(id);
-        setAuth(patchReq, "smith123");
+        setAuth(patchReq, "user14");
         patchReq.addHeader("Content-type", "application/sparql-update");
         patchReq.setEntity(new StringEntity("PREFIX dc: <http://purl.org/dc/elements/1.1/>\n"
                 + "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n"
                 + "INSERT DATA { <> rdf:type dc:type }"));
         assertEquals(HttpStatus.SC_NO_CONTENT, getStatus(patchReq));
     }
+
+
+    @Test
+    public void testDeletePropertyAsUser() throws IOException {
+        final String testObj = ingestObj("/rest/test_delete");
+        final String acl1 = ingestAcl("fedoraAdmin", "/acls/15/acl.ttl", "/acls/15/authorization.ttl");
+        linkToAcl(testObj, acl1);
+
+        final String id = "/rest/test_delete/" + getRandomUniqueId();
+        ingestObj(id);
+
+        HttpPatch patchReq = patchObjMethod(id);
+        setAuth(patchReq, "user15");
+        patchReq.addHeader("Content-type", "application/sparql-update");
+        patchReq.setEntity(new StringEntity("PREFIX dc: <http://purl.org/dc/elements/1.1/>\n"
+                + "INSERT DATA { <> dc:title 'title' . " +
+                "                <> dc:rights 'rights' . }"));
+        assertEquals(HttpStatus.SC_NO_CONTENT, getStatus(patchReq));
+
+        patchReq = patchObjMethod(id);
+        setAuth(patchReq, "user15");
+        patchReq.addHeader("Content-type", "application/sparql-update");
+        patchReq.setEntity(new StringEntity("PREFIX dc: <http://purl.org/dc/elements/1.1/>\n"
+                + "DELETE { <> dc:title ?any . } WHERE { <> dc:title ?any . }"));
+        assertEquals(HttpStatus.SC_NO_CONTENT, getStatus(patchReq));
+
+        patchReq = patchObjMethod(id);
+        setAuth(patchReq, "notUser15");
+        patchReq.addHeader("Content-type", "application/sparql-update");
+        patchReq.setEntity(new StringEntity("PREFIX dc: <http://purl.org/dc/elements/1.1/>\n"
+                + "DELETE { <> dc:rights ?any . } WHERE { <> dc:rights ?any . }"));
+        assertEquals(HttpStatus.SC_FORBIDDEN, getStatus(patchReq));
+    }
+
 
 }

@@ -1,6 +1,6 @@
 @prefix acl: <http://www.w3.org/ns/auth/acl#> .
 
 <> a acl:Authorization ;
-   acl:agent "user06b" ;
+   acl:agent "user15" ;
    acl:mode acl:Read, acl:Write ;
-   acl:accessTo </rest> .
+   acl:accessTo </rest/test_delete> .

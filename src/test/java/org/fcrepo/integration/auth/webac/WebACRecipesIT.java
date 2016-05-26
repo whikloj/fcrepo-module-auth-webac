@@ -18,7 +18,9 @@ package org.fcrepo.integration.auth.webac;
 import static java.util.Arrays.stream;
 import static javax.ws.rs.core.Response.Status.CREATED;
 import static org.fcrepo.auth.webac.URIConstants.WEBAC_ACCESS_CONTROL_VALUE;
+import static org.fcrepo.auth.webac.WebACRolesProvider.GROUP_AGENT_BASE_URI_PROPERTY;
 import static org.fcrepo.auth.webac.WebACRolesProvider.ROOT_AUTHORIZATION_PROPERTY;
+import static org.fcrepo.auth.webac.WebACRolesProvider.USER_AGENT_BASE_URI_PROPERTY;
 import static org.fcrepo.kernel.api.RdfLexicon.DC_NAMESPACE;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -553,6 +555,35 @@ public class WebACRecipesIT extends AbstractResourceIT {
         adminUnauthorizedDelegatedGet.addHeader("On-Behalf-Of", "fakeuser");
         assertEquals("delegated fakeuser cannot read object", HttpStatus.SC_FORBIDDEN,
                 getStatus(adminUnauthorizedDelegatedGet));
+
+        final HttpGet adminDelegatedGet2 = getObjMethod(targetPath);
+        setAuth(adminDelegatedGet2, "fedoraAdmin");
+        adminDelegatedGet2.addHeader("On-Behalf-Of", "info:user/user2");
+        assertEquals("delegated user can read object", HttpStatus.SC_OK, getStatus(adminDelegatedGet2));
+
+        final HttpGet adminUnauthorizedDelegatedGet2 = getObjMethod(targetPath);
+        setAuth(adminUnauthorizedDelegatedGet2, "fedoraAdmin");
+        adminUnauthorizedDelegatedGet2.addHeader("On-Behalf-Of", "info:user/fakeuser");
+        assertEquals("delegated fakeuser cannot read object", HttpStatus.SC_FORBIDDEN,
+                getStatus(adminUnauthorizedDelegatedGet2));
+
+        // Now test with the system property in effect
+        System.setProperty(USER_AGENT_BASE_URI_PROPERTY, "info:user/");
+        System.setProperty(GROUP_AGENT_BASE_URI_PROPERTY, "info:group/");
+
+        final HttpGet adminDelegatedGet3 = getObjMethod(targetPath);
+        setAuth(adminDelegatedGet3, "fedoraAdmin");
+        adminDelegatedGet3.addHeader("On-Behalf-Of", "info:user/user2");
+        assertEquals("delegated user can read object", HttpStatus.SC_OK, getStatus(adminDelegatedGet3));
+
+        final HttpGet adminUnauthorizedDelegatedGet3 = getObjMethod(targetPath);
+        setAuth(adminUnauthorizedDelegatedGet3, "fedoraAdmin");
+        adminUnauthorizedDelegatedGet3.addHeader("On-Behalf-Of", "info:user/fakeuser");
+        assertEquals("delegated fakeuser cannot read object", HttpStatus.SC_FORBIDDEN,
+                getStatus(adminUnauthorizedDelegatedGet3));
+
+        System.clearProperty(USER_AGENT_BASE_URI_PROPERTY);
+        System.clearProperty(GROUP_AGENT_BASE_URI_PROPERTY);
     }
 
     @Test
@@ -578,6 +609,66 @@ public class WebACRecipesIT extends AbstractResourceIT {
         final HttpGet requestGet2 = getObjMethod(idVersion);
         setAuth(requestGet2, "user12");
         assertEquals("testuser can't read versioned object", HttpStatus.SC_OK, getStatus(requestGet2));
+    }
+
+    @Test
+    public void testAgentAsUri() throws IOException {
+        final String id = "/rest/" + getRandomUniqueId();
+        final String testObj = ingestObj(id);
+        final String acl = ingestAcl("fedoraAdmin", "/acls/16/acl.ttl", "/acls/16/authorization.ttl");
+
+        logger.debug("Anonymous can't read (no ACL): {}", id);
+        final HttpGet requestGet1 = getObjMethod(id);
+        assertEquals(HttpStatus.SC_FORBIDDEN, getStatus(requestGet1));
+
+        logger.debug("Can username 'smith123' read {} (no ACL)", id);
+        final HttpGet requestGet2 = getObjMethod(id);
+        setAuth(requestGet2, "smith123");
+        assertEquals(HttpStatus.SC_FORBIDDEN, getStatus(requestGet2));
+
+        System.setProperty(USER_AGENT_BASE_URI_PROPERTY, "info:user/");
+        System.setProperty(GROUP_AGENT_BASE_URI_PROPERTY, "info:group/");
+
+        logger.debug("Can username 'smith123' read {} (overridden system ACL)", id);
+        final HttpGet requestGet3 = getObjMethod(id);
+        setAuth(requestGet3, "smith123");
+        assertEquals(HttpStatus.SC_FORBIDDEN, getStatus(requestGet3));
+
+        logger.debug("Can username 'group123' read {} (overridden system ACL)", id);
+        final HttpGet requestGet4 = getObjMethod(id);
+        setAuth(requestGet4, "group123");
+        assertEquals(HttpStatus.SC_FORBIDDEN, getStatus(requestGet4));
+
+        System.clearProperty(USER_AGENT_BASE_URI_PROPERTY);
+        System.clearProperty(GROUP_AGENT_BASE_URI_PROPERTY);
+
+        // Add ACL to object
+        linkToAcl(testObj, acl);
+
+        logger.debug("Anonymous still can't read (ACL present)");
+        final HttpGet requestGet5 = getObjMethod(id);
+        assertEquals(HttpStatus.SC_FORBIDDEN, getStatus(requestGet5));
+
+        logger.debug("Can username 'smith123' read {} (ACL present, no system properties)", testObj);
+        final HttpGet requestGet6 = getObjMethod(id);
+        setAuth(requestGet6, "smith123");
+        assertEquals(HttpStatus.SC_FORBIDDEN, getStatus(requestGet6));
+
+        System.setProperty(USER_AGENT_BASE_URI_PROPERTY, "info:user/");
+        System.setProperty(GROUP_AGENT_BASE_URI_PROPERTY, "info:group/");
+
+        logger.debug("Can username 'smith123' read {} (ACL, system properties present)", id);
+        final HttpGet requestGet7 = getObjMethod(id);
+        setAuth(requestGet7, "smith123");
+        assertEquals(HttpStatus.SC_OK, getStatus(requestGet7));
+
+        logger.debug("Can groupname 'group123' read {} (ACL, system properties present)", id);
+        final HttpGet requestGet8 = getObjMethod(id);
+        setAuth(requestGet8, "group123");
+        assertEquals(HttpStatus.SC_OK, getStatus(requestGet8));
+
+        System.clearProperty(USER_AGENT_BASE_URI_PROPERTY);
+        System.clearProperty(GROUP_AGENT_BASE_URI_PROPERTY);
     }
 
     @Test

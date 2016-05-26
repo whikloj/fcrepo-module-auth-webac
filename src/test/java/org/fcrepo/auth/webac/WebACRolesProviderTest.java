@@ -135,7 +135,7 @@ public class WebACRolesProviderTest {
 
     @Test
     public void acl01ParentTest() throws RepositoryException {
-        final String agent = "smith123";
+        final String agent = "user01";
         final String accessTo = "/webacl_box1";
         final String acl = "/acls/01";
         final String auth = acl + "/authorization.ttl";
@@ -174,7 +174,7 @@ public class WebACRolesProviderTest {
 
     @Test
     public void acl01Test1() throws RepositoryException {
-        final String agent = "smith123";
+        final String agent = "user01";
         final String accessTo = "/webacl_box1";
         final String acl = "/acls/01";
         final String auth = acl + "/authorization.ttl";

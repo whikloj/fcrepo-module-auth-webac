@@ -350,8 +350,6 @@ public class WebACRolesProvider implements AccessRolesProvider {
     private List<WebACAuthorization> getAuthorizations(final String location) {
 
         final Session internalSession = sessionFactory.getInternalSession();
-        final String userBaseUri = System.getProperty(USER_AGENT_BASE_URI_PROPERTY);
-        final String groupBaseUri = System.getProperty(GROUP_AGENT_BASE_URI_PROPERTY);
         final List<WebACAuthorization> authorizations = new ArrayList<>();
         final IdentifierConverter<Resource, FedoraResource> translator =
                 new DefaultIdentifierTranslator(internalSession);

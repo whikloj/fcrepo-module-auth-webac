@@ -59,6 +59,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
+import javax.inject.Inject;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
@@ -78,7 +79,6 @@ import org.fcrepo.kernel.modeshape.rdf.impl.DefaultIdentifierTranslator;
 
 import org.modeshape.jcr.value.Path;
 import org.slf4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import com.hp.hpl.jena.graph.Triple;
 import com.hp.hpl.jena.rdf.model.Model;
@@ -106,10 +106,10 @@ public class WebACRolesProvider implements AccessRolesProvider {
 
     private static final String JCR_VERSIONABLE_UUID_PROPERTY = "jcr:versionableUuid";
 
-    @Autowired
+    @Inject
     private NodeService nodeService;
 
-    @Autowired
+    @Inject
     private SessionFactory sessionFactory;
 
     @Override

@@ -22,6 +22,8 @@ import static org.slf4j.LoggerFactory.getLogger;
 import static com.hp.hpl.jena.rdf.model.ResourceFactory.createProperty;
 
 import java.net.URI;
+
+import javax.inject.Inject;
 import javax.jcr.Session;
 import javax.ws.rs.core.Link;
 import javax.ws.rs.core.UriInfo;
@@ -40,7 +42,6 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
 import com.hp.hpl.jena.rdf.model.Resource;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 /**
@@ -54,10 +55,10 @@ public class LinkHeaderProvider implements UriAwareHttpHeaderFactory {
 
     private static final Logger LOGGER = getLogger(LinkHeaderProvider.class);
 
-    @Autowired
+    @Inject
     private SessionFactory sessionFactory;
 
-    @Autowired
+    @Inject
     private NodeService nodeService;
 
     @Override

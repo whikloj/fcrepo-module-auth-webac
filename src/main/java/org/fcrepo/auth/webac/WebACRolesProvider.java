@@ -161,7 +161,7 @@ public class WebACRolesProvider implements AccessRolesProvider {
             if (base.hasProperty(JCR_VERSIONABLE_UUID_PROPERTY)) {
                 final String versionUuid = base.getProperty(JCR_VERSIONABLE_UUID_PROPERTY).getValue().getString();
                 LOGGER.debug("versionableUuid : {}", versionUuid);
-                return nodeService.cast(internalSession.getNodeByIdentifier(versionUuid));
+                return nodeService.find(internalSession, internalSession.getNodeByIdentifier(versionUuid).getPath());
             }
         } catch (final ItemNotFoundException e) {
             LOGGER.error("Node with jcr:versionableUuid not found : {}", e.getMessage());
@@ -173,7 +173,11 @@ public class WebACRolesProvider implements AccessRolesProvider {
 
     @Override
     public Map<String, Collection<String>> getRoles(final Node node, final boolean effective) {
-        return getAgentRoles(nodeService.cast(node));
+        try {
+            return getAgentRoles(nodeService.find(node.getSession(), node.getPath()));
+        } catch (final RepositoryException ex) {
+            throw new RepositoryRuntimeException(ex);
+        }
     }
 
     /**

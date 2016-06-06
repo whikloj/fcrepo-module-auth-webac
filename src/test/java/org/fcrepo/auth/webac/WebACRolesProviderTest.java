@@ -30,6 +30,7 @@ import static org.fcrepo.kernel.api.RequiredRdfContext.PROPERTIES;
 import static org.fcrepo.kernel.api.RdfLexicon.REPOSITORY_NAMESPACE;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
@@ -105,7 +106,7 @@ public class WebACRolesProviderTest {
         setField(roleProvider, "nodeService", mockNodeService);
         setField(roleProvider, "sessionFactory", mockSessionFactory);
 
-        when(mockNodeService.cast(mockNode)).thenReturn(mockResource);
+        when(mockNodeService.find(eq(mockSession), any())).thenReturn(mockResource);
         when(mockNode.getSession()).thenReturn(mockSession);
         when(mockSessionFactory.getInternalSession()).thenReturn(mockSession);
 

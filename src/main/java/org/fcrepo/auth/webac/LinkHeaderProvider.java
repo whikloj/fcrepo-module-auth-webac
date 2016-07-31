@@ -71,7 +71,7 @@ public class LinkHeaderProvider implements UriAwareHttpHeaderFactory {
                 new DefaultIdentifierTranslator(internalSession);
         final ListMultimap<String, String> headers = ArrayListMultimap.create();
 
-        LOGGER.debug("Adding WebAC Link Header for Resource: {}", resource);
+        LOGGER.debug("Adding WebAC Link Header for Resource: {}", resource.getPath());
         // Get the correct Acl for this resource
         WebACRolesProvider.getEffectiveAcl(resource).ifPresent(acls -> {
             // If the Acl is present we need to use the internal session to get its URI

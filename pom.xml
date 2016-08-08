@@ -19,8 +19,6 @@
     <!-- this is used for the scm definition -->
     <project_name>fcrepo-module-auth-webac</project_name>
     <project_organization>fcrepo4</project_organization>
-    <!-- module-specific dependencies -->
-    <commons-codec.version>1.6</commons-codec.version>
     <!-- OSGi -->
     <osgi.import.packages>
       *
@@ -141,13 +139,6 @@
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
       <artifactId>httpclient</artifactId>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>commons-codec</groupId>
-      <artifactId>commons-codec</artifactId>
-      <version>${commons-codec.version}</version>
       <scope>test</scope>
     </dependency>
 

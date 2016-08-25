@@ -25,8 +25,8 @@ import static java.util.stream.IntStream.range;
 import static java.util.stream.Stream.concat;
 import static java.util.stream.Stream.empty;
 import static java.util.stream.Stream.of;
-import static com.hp.hpl.jena.graph.NodeFactory.createURI;
-import static com.hp.hpl.jena.rdf.model.ModelFactory.createDefaultModel;
+import static org.apache.jena.graph.NodeFactory.createURI;
+import static org.apache.jena.rdf.model.ModelFactory.createDefaultModel;
 import static org.apache.jena.riot.Lang.TTL;
 import static org.fcrepo.auth.webac.URIConstants.FOAF_AGENT_VALUE;
 import static org.fcrepo.auth.webac.URIConstants.FOAF_GROUP;
@@ -82,11 +82,11 @@ import org.fcrepo.kernel.modeshape.rdf.impl.DefaultIdentifierTranslator;
 import org.modeshape.jcr.value.Path;
 import org.slf4j.Logger;
 
-import com.hp.hpl.jena.graph.Triple;
-import com.hp.hpl.jena.rdf.model.Model;
-import com.hp.hpl.jena.rdf.model.Resource;
-import com.hp.hpl.jena.rdf.model.Statement;
-import com.hp.hpl.jena.shared.JenaException;
+import org.apache.jena.graph.Triple;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdf.model.Statement;
+import org.apache.jena.shared.JenaException;
 
 /**
  * @author acoburn
@@ -323,7 +323,7 @@ public class WebACRolesProvider implements AccessRolesProvider {
      * Map a Jena Node to a Stream of Strings. Any non-URI, non-Literals map to an empty Stream,
      * making this suitable to use with flatMap.
      */
-    private static final Stream<String> nodeToStringStream(final com.hp.hpl.jena.graph.Node object) {
+    private static final Stream<String> nodeToStringStream(final org.apache.jena.graph.Node object) {
         if (object.isURI()) {
             return of(object.getURI());
         } else if (object.isLiteral()) {
@@ -462,7 +462,7 @@ public class WebACRolesProvider implements AccessRolesProvider {
         return authorizations;
     }
 
-    private static Stream<String> additionalAgentValues(final com.hp.hpl.jena.graph.Node object) {
+    private static Stream<String> additionalAgentValues(final org.apache.jena.graph.Node object) {
         final String groupBaseUri = System.getProperty(GROUP_AGENT_BASE_URI_PROPERTY);
         final String userBaseUri = System.getProperty(USER_AGENT_BASE_URI_PROPERTY);
 
